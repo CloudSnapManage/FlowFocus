@@ -6,7 +6,7 @@ import type { Layouts } from 'react-grid-layout';
 
 const LAYOUT_STORAGE_KEY = 'flowfocus_dashboard_layout';
 
-const defaultLayouts: Layouts = {
+export const defaultLayouts: Layouts = {
   lg: [
     { i: 'agenda', x: 0, y: 0, w: 7, h: 11, minH: 6, minW: 4 },
     { i: 'notes', x: 7, y: 0, w: 5, h: 11, minH: 6, minW: 3 },
@@ -52,7 +52,13 @@ export function useDashboardLayout() {
     try {
       const savedLayouts = localStorage.getItem(LAYOUT_STORAGE_KEY);
       if (savedLayouts) {
-        setLayouts(JSON.parse(savedLayouts));
+        const parsedLayouts = JSON.parse(savedLayouts);
+        // Validate saved layout to prevent crashes from malformed data
+        if (parsedLayouts && parsedLayouts.lg) {
+          setLayouts(parsedLayouts);
+        } else {
+          setLayouts(defaultLayouts);
+        }
       }
     } catch (error) {
       console.error("Failed to load dashboard layout from localStorage", error);

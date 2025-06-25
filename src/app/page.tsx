@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import type { Layout } from 'react-grid-layout';
-import { useDashboardLayout } from "@/hooks/use-dashboard-layout";
+import { useDashboardLayout, defaultLayouts } from "@/hooks/use-dashboard-layout";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -287,11 +287,9 @@ export default function DashboardPage() {
         rowHeight={30}
         margin={[16, 16]}
       >
-        {layouts.lg.map(item => (dashboardItems as any)[item.i])}
+        {defaultLayouts.lg.map(item => (dashboardItems as any)[item.i])}
       </ResponsiveGridLayout>
 
     </div>
   )
 }
-
-    
