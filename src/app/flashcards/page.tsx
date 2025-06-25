@@ -1,92 +1,252 @@
-"use client"
 
-import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus, RefreshCw } from "lucide-react";
+"use client";
 
-const flashcards = [
-    { q: "What is React?", a: "A JavaScript library for building user interfaces." },
-    { q: "What is JSX?", a: "A syntax extension for JavaScript, used with React to describe what the UI should look like." },
-    { q: "What is the virtual DOM?", a: "A programming concept where a virtual representation of a UI is kept in memory and synced with the 'real' DOM." },
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Plus, MoreVertical, Pencil, Trash2, FolderOpen } from "lucide-react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from "@/components/ui/card";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
+import type { Deck } from "@/lib/types";
+
+const initialDecks: Deck[] = [
+  {
+    id: "d1",
+    name: "React Fundamentals",
+    description: "Key concepts for mastering React.",
+    cards: [
+      { id: "c1", question: "What is React?", answer: "A JavaScript library for building user interfaces." },
+      { id: "c2", question: "What is JSX?", answer: "A syntax extension for JavaScript, used with React to describe what the UI should look like." },
+      { id: "c3", question: "What is the virtual DOM?", answer: "A programming concept where a virtual representation of a UI is kept in memory and synced with the 'real' DOM." },
+    ],
+  },
+  {
+    id: "d2",
+    name: "JavaScript Essentials",
+    description: "Core JS concepts every developer should know.",
+    cards: [
+        { id: "c4", question: "What are Promises?", answer: "An object representing the eventual completion or failure of an asynchronous operation." },
+        { id: "c5", question: "Difference between `let`, `const`, and `var`?", answer: "`var` is function-scoped, `let` and `const` are block-scoped. `const` cannot be reassigned." },
+    ]
+  }
 ];
 
-export default function FlashcardsPage() {
-    const [isFlipped, setIsFlipped] = useState(false);
-    const [currentIndex, setCurrentIndex] = useState(0);
+const deckFormSchema = z.object({
+  name: z.string().min(2, "Deck name must be at least 2 characters."),
+  description: z.string().optional(),
+});
 
-    const handleFlip = () => setIsFlipped(!isFlipped);
+export default function FlashcardsHomePage() {
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [deckToEdit, setDeckToEdit] = useState<Deck | null>(null);
+  const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
-    const handleNext = () => {
-        setIsFlipped(false);
-        setTimeout(() => setCurrentIndex((prev) => (prev + 1) % flashcards.length), 150);
+  const form = useForm<z.infer<typeof deckFormSchema>>({
+    resolver: zodResolver(deckFormSchema),
+    defaultValues: { name: "", description: "" },
+  });
+
+  useEffect(() => {
+    const storedDecks = localStorage.getItem("flowfocus_decks");
+    if (storedDecks) {
+      setDecks(JSON.parse(storedDecks));
+    } else {
+      setDecks(initialDecks);
     }
-    
-    const handlePrev = () => {
-        setIsFlipped(false);
-        setTimeout(() => setCurrentIndex((prev) => (prev - 1 + flashcards.length) % flashcards.length), 150);
+  }, []);
+
+  useEffect(() => {
+    // Only save if decks state is not the initial empty array, to avoid overwriting on first load
+    if (decks.length > 0 || localStorage.getItem("flowfocus_decks")) {
+      localStorage.setItem("flowfocus_decks", JSON.stringify(decks));
     }
-    
+  }, [decks]);
+
+  const openFormDialog = (deck: Deck | null) => {
+    setDeckToEdit(deck);
+    form.reset(deck ? { name: deck.name, description: deck.description || "" } : { name: "", description: "" });
+    setIsFormOpen(true);
+  };
+
+  const onSubmit = (data: z.infer<typeof deckFormSchema>) => {
+    if (deckToEdit) {
+      setDecks(decks.map(d => d.id === deckToEdit.id ? { ...d, ...data } : d));
+    } else {
+      const newDeck: Deck = {
+        id: `d${Date.now()}`,
+        name: data.name,
+        description: data.description,
+        cards: [],
+      };
+      setDecks([...decks, newDeck]);
+    }
+    setIsFormOpen(false);
+  };
+  
+  const handleDeleteDeck = (deckId: string) => {
+    setDecks(decks.filter(d => d.id !== deckId));
+    setDeckToDelete(null);
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight">Flashcards</h1>
-          <p className="text-muted-foreground">Boost your memory with digital flashcards.</p>
+          <h1 className="text-3xl font-bold font-headline tracking-tight">Flashcard Decks</h1>
+          <p className="text-muted-foreground">Create and manage your study decks.</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Deck
-        </Button>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+                <Button onClick={() => openFormDialog(null)}>
+                    <Plus className="mr-2 h-4 w-4" /> New Deck
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{deckToEdit ? 'Edit Deck' : 'Create New Deck'}</DialogTitle>
+                    <DialogDescription>{deckToEdit ? 'Rename your deck or change its description.' : 'Give your new deck a name and an optional description.'}</DialogDescription>
+                </DialogHeader>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Deck Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., React Hooks" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Description (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Textarea placeholder="What's this deck about?" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <DialogFooter>
+                            <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                            <Button type="submit">Save Deck</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
+            </DialogContent>
+        </Dialog>
       </div>
-      <div className="flex flex-col items-center justify-center gap-6 py-8">
-        <div className="w-full max-w-2xl h-80 perspective-1000">
-            <Card 
-                className={`w-full h-full relative transition-transform duration-700 transform-style-3d ${isFlipped ? 'rotate-y-180' : ''}`}
-            >
-                <div className="absolute w-full h-full backface-hidden flex flex-col justify-center items-center text-center p-6">
-                    <CardContent className="p-0">
-                        <p className="text-2xl font-semibold font-headline">{flashcards[currentIndex].q}</p>
+
+      {decks.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {decks.map(deck => (
+                <Card key={deck.id} className="flex flex-col shadow-sm">
+                    <CardHeader>
+                        <div className="flex items-start justify-between">
+                            <CardTitle className="font-headline">{deck.name}</CardTitle>
+                             <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                        <MoreVertical className="h-4 w-4" />
+                                        <span className="sr-only">Deck options</span>
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openFormDialog(deck)}>
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        <span>Edit</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setDeckToDelete(deck)} className="text-destructive focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" />
+                                        <span>Delete</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                        </div>
+                        {deck.description && <CardDescription>{deck.description}</CardDescription>}
+                    </CardHeader>
+                    <CardContent className="flex-grow flex flex-col justify-between">
+                       <p className="text-sm text-muted-foreground">{deck.cards.length} card{deck.cards.length !== 1 && 's'}</p>
+                        <Button asChild className="mt-4 w-full">
+                           <Link href={`/flashcards/${deck.id}`}>
+                               <FolderOpen className="mr-2 h-4 w-4" />
+                               Study Deck
+                           </Link>
+                        </Button>
                     </CardContent>
-                </div>
-                <div className="absolute w-full h-full backface-hidden rotate-y-180 flex flex-col justify-center items-center text-center p-6 bg-card">
-                    <CardContent className="p-0">
-                        <p className="text-xl">{flashcards[currentIndex].a}</p>
-                    </CardContent>
-                </div>
-            </Card>
+                </Card>
+            ))}
         </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={handlePrev} aria-label="Previous card"><ChevronLeft /></Button>
-          <Button size="lg" onClick={handleFlip} className="w-40">
-            <RefreshCw className={`mr-2 h-4 w-4 transition-transform duration-300 ${isFlipped ? 'rotate-180' : ''}`} />
-            {isFlipped ? 'View Question' : 'Reveal Answer'}
-          </Button>
-          <Button variant="outline" size="icon" onClick={handleNext} aria-label="Next card"><ChevronRight /></Button>
+      ) : (
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 py-20 text-center">
+            <h3 className="text-xl font-semibold">No decks found</h3>
+            <p className="text-muted-foreground mt-2">Get started by creating your first flashcard deck.</p>
+            <Button onClick={() => openFormDialog(null)} className="mt-4">
+                <Plus className="mr-2 h-4 w-4" /> Create New Deck
+            </Button>
         </div>
-        <p className="text-sm text-muted-foreground">Card {currentIndex + 1} of {flashcards.length}</p>
-      </div>
+      )}
+
+      <AlertDialog open={!!deckToDelete} onOpenChange={open => !open && setDeckToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the "{deckToDelete?.name}" deck and all its cards.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setDeckToDelete(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleDeleteDeck(deckToDelete!.id)} className={cn(buttonVariants({ variant: "destructive" }))}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-
-// Add some CSS for the 3D effect in globals.css if needed, or use Tailwind classes.
-// I've added a custom CSS class to make this work.
-// Let's add it to globals.css
-// But I can't modify globals.css twice.
-// Let's use Tailwind plugins or just inline styles for simplicity for now.
-// The provided setup has `transform-style-3d` and `backface-hidden` utilities in tailwind.
-// So I'll just add some utility classes.
-const style = `
-.perspective-1000 { perspective: 1000px; }
-.transform-style-3d { transform-style: preserve-3d; }
-.backface-hidden { backface-visibility: hidden; }
-.rotate-y-180 { transform: rotateY(180deg); }
-`;
-
-// Injecting style is not a good practice, but for this self-contained example it's ok.
-// A better way is to add utilities to tailwind.config.js
-// However, I'll rely on the fact that these are common enough to be supported or can be added.
-// It seems these utilities are not in standard tailwind, let's just make it simpler.
-// I will rewrite it to be a simple fade transition.

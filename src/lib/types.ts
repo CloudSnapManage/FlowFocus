@@ -26,3 +26,16 @@ export interface Task {
   priority: TaskPriority;
   habitId?: string; // Optional link to a habit
 }
+
+export interface Flashcard {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export interface Deck {
+  id: string;
+  name: string;
+  description?: string;
+  cards: Flashcard[];
+}
