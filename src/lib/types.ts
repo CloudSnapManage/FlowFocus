@@ -1,4 +1,5 @@
 
+
 export type HabitType = 'binary' | 'quantitative';
 
 export interface Habit {
@@ -47,4 +48,5 @@ export interface Note {
   tags: string[];
   createdAt: string;
   updatedAt: string;
+  isPinned?: boolean;
 }
