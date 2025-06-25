@@ -61,11 +61,11 @@ export function useStudyPlans() {
   }, []);
   
   const importPlans = useCallback((importedPlans: StudyPlan[]) => {
-    // A simple merge strategy: add new, don't overwrite existing
+    // A more robust merge strategy: update existing plans and add new ones.
     setPlans(prevPlans => {
-      const existingIds = new Set(prevPlans.map(p => p.id));
-      const newPlans = importedPlans.filter(p => !existingIds.has(p.id));
-      return [...prevPlans, ...newPlans];
+      const planMap = new Map(prevPlans.map(p => [p.id, p]));
+      importedPlans.forEach(p => planMap.set(p.id, p));
+      return Array.from(planMap.values());
     });
   }, []);
 

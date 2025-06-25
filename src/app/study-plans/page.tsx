@@ -126,6 +126,9 @@ const PlanEditor = ({ plan, onSave, onCancel }: { plan?: StudyPlan, onSave: (dat
                                             </FormItem>
                                         )}/>
                                     </div>
+                                    <FormField control={form.control} name={`tasks.${index}.resource`} render={({ field }) => (
+                                        <FormItem><FormLabel>Resource URL (Optional)</FormLabel><FormControl><Input placeholder="https://..." {...field} /></FormControl><FormMessage /></FormItem>
+                                    )}/>
                                     <div className="flex justify-end">
                                         <Button type="button" variant="destructive" size="sm" onClick={() => remove(index)}>
                                             <Trash2 className="h-4 w-4 mr-2" /> Remove Task
@@ -222,6 +225,11 @@ export default function StudyPlansPage() {
                 }
             } catch (error) {
                 toast({ title: "Import Failed", description: "The selected file is not a valid study plan export.", variant: 'destructive' });
+            } finally {
+                // Reset the file input so the same file can be re-uploaded
+                if (event.target) {
+                    event.target.value = '';
+                }
             }
         };
         reader.readAsText(file);
@@ -257,9 +265,9 @@ export default function StudyPlansPage() {
                     {plans.map(plan => {
                         const progress = plan.tasks.length > 0 ? (plan.tasks.filter(t => t.completed).length / plan.tasks.length) * 100 : 0;
                         return (
-                            <AccordionItem value={plan.id} key={plan.id} className="border rounded-lg">
-                                <div className="flex items-start w-full">
-                                    <AccordionTrigger className="flex-1 p-4 text-left hover:no-underline">
+                            <AccordionItem value={plan.id} key={plan.id} className="border rounded-lg bg-card">
+                                <div className="flex items-center w-full p-4">
+                                    <AccordionTrigger className="flex-1 text-left hover:no-underline p-0">
                                         <div className="flex flex-col items-start text-left w-full">
                                             <h3 className="text-xl font-headline font-semibold">{plan.title}</h3>
                                             <p className="text-sm text-muted-foreground font-normal">{plan.goal}</p>
@@ -269,7 +277,7 @@ export default function StudyPlansPage() {
                                             </div>
                                         </div>
                                     </AccordionTrigger>
-                                    <div className="flex gap-2 self-center pr-4">
+                                    <div className="flex gap-2 self-center pl-4">
                                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(plan)}><Pencil className="h-4 w-4"/></Button>
                                         <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deletePlan(plan.id)}><Trash2 className="h-4 w-4"/></Button>
                                     </div>
