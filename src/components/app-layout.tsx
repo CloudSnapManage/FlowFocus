@@ -36,7 +36,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
     // Default layout
     return (
-        <SidebarProvider>
+        <SidebarProvider className="animate-slide-in-from-left">
             <Sidebar>
                 <SidebarHeader>
                     <div className="p-2">

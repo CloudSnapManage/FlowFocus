@@ -33,14 +33,15 @@ export function TopNav() {
   return (
     <nav className="flex items-center gap-2">
       <TooltipProvider delayDuration={0}>
-        {navItems.map((item) => (
+        {navItems.map((item, index) => (
           <Tooltip key={item.href}>
             <TooltipTrigger asChild>
               <Button
                 asChild
                 variant={isActive(item.href) ? "secondary" : "ghost"}
                 size="icon"
-                className="h-12 w-12 transform transition-transform duration-200 hover:scale-110"
+                className="h-12 w-12 transform transition-transform duration-200 hover:scale-110 opacity-0 animate-drop-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <Link href={item.href}>
                   <item.icon className="h-6 w-6" />
