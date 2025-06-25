@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -38,7 +37,7 @@ const taskSchema = z.object({
 const planSchema = z.object({
     id: z.string(),
     title: z.string().min(1, "Plan title is required."),
-    goal: z.string().optional(),
+ goal: z.string().optional(),
     startDate: z.date(),
     tasks: z.array(taskSchema),
 });
@@ -74,9 +73,15 @@ const PlanEditor = ({ plan, onSave, onCancel }: { plan?: StudyPlan, onSave: (dat
         onSave({
             ...data,
             startDate: format(data.startDate, 'yyyy-MM-dd'),
-            tasks: data.tasks.map(t => ({ ...t, date: format(t.date, 'yyyy-MM-dd') })),
-            // Keep userInput if it exists, otherwise use a default
-            userInput: plan?.userInput || { subject: data.goal || data.title, duration: '', details: 'Manually created', startDate: format(data.startDate, 'yyyy-MM-dd') }
+ tasks: data.tasks.map(t => ({ ...t, date: format(t.date, 'yyyy-MM-dd'), })),
+            goal: data.goal || '', // Ensure goal is a string, even if data.goal is undefined
+ // Merge new data into existing userInput, preserving existing fields if they exist
+ userInput: {
+ subject: plan?.userInput?.subject || data.goal || data.title,
+ duration: plan?.userInput?.duration || '',
+ details: plan?.userInput?.details || 'Manually created',
+ startDate: plan?.userInput?.startDate || format(data.startDate, 'yyyy-MM-dd')
+ }
         });
         onCancel();
     };
