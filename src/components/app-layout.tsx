@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useLayout } from "@/hooks/use-layout";
@@ -16,15 +17,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         return (
             <div className="flex min-h-screen flex-col">
                 <header className="sticky top-0 z-40 w-full border-b bg-card">
-                    <div className="container flex h-20 items-center space-x-4 sm:justify-between sm:space-x-0 px-4 md:px-6">
-                        <Link href="/" className="flex items-center gap-2 mr-6">
+                    <div className="container flex h-20 items-center justify-between px-4 md:px-6">
+                        <Link href="/" className="flex items-center gap-2">
                            <Rocket className="size-6 text-primary" />
                            <span className="font-bold text-lg font-headline">FlowFocus</span>
                         </Link>
-                        <div className="flex flex-1 items-center justify-center space-x-4">
+                        <div className="flex-1 flex items-center justify-center">
                             <TopNav />
                         </div>
-                        <div className="flex items-center justify-end space-x-4 ml-auto">
+                        <div className="flex items-center">
                             <UserNav />
                         </div>
                     </div>
