@@ -9,8 +9,8 @@ export default function StudyPlanPage() {
   return (
     <div className="flex flex-col gap-6">
         <div>
-          <h1 className="text-3xl font-bold font-headline tracking-tight">AI Study Plan Generator</h1>
-          <p className="text-muted-foreground">Create a personalized study schedule tailored to your goals.</p>
+          <h1 className="text-3xl font-bold font-headline tracking-tight">AI Study Planner</h1>
+          <p className="text-muted-foreground">Let our AI generate a personalized study schedule to help you achieve your goals.</p>
         </div>
         <div className="grid lg:grid-cols-2 gap-8 items-start">
             <Card className="shadow-sm">
@@ -41,7 +41,7 @@ export default function StudyPlanPage() {
             </Card>
             <Card className="shadow-sm">
                  <CardHeader>
-                    <CardTitle>Your Personalized Study Plan</CardTitle>
+                    <CardTitle>Your Generated Study Plan</CardTitle>
                     <CardDescription>Here's a schedule generated just for you. You can edit it as needed.</CardDescription>
                 </CardHeader>
                 <CardContent className="min-h-[300px]">

@@ -15,7 +15,7 @@ const navItems = [
   { href: "/habits", label: "Habit Tracker", icon: Repeat },
   { href: "/flashcards", label: "Flashcards", icon: Copy },
   { href: "/notes", label: "Notes", icon: NotebookText },
-  { href: "/study-plan", label: "AI Study Plan", icon: BrainCircuit },
+  { href: "/study-plan", label: "AI Study Planner", icon: BrainCircuit },
 ]
 
 export function MainNav() {

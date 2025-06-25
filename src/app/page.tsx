@@ -31,7 +31,7 @@ export default function DashboardPage() {
     { title: "Habit Tracker", description: "Build good habits and track your progress.", icon: Repeat, href: "/habits" },
     { title: "Flashcards", description: "Review and memorize with digital flashcards.", icon: Copy, href: "/flashcards" },
     { title: "Notes", description: "Capture your thoughts with Markdown support.", icon: NotebookText, href: "/notes" },
-    { title: "AI Study Plan", description: "Generate a personalized study plan.", icon: BrainCircuit, href: "/study-plan" },
+    { title: "AI Study Planner", description: "Generate a personalized study plan with AI.", icon: BrainCircuit, href: "/study-plan" },
   ];
 
   const completedHabits = habits.filter(h => h.completedToday).length;
