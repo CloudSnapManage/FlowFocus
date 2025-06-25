@@ -55,7 +55,7 @@ export interface Note {
 export interface StudyTask {
   id: string;
   topic: string;
-  description: string;
+  description?: string;
   duration: string; // e.g., "2 hours"
   completed: boolean;
   date: string; // ISO date string, e.g., "2024-07-28"
