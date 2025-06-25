@@ -16,7 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Plus, Trash2, BookMarked, Pencil, Upload, Download } from 'lucide-react';
+import { Plus, Trash2, BookMarked, Pencil, Upload, Download, ExternalLink } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
@@ -282,6 +282,12 @@ export default function StudyPlansPage() {
                                                 <label htmlFor={`${plan.id}-${task.id}`} className="font-semibold">{task.topic} <span className='font-normal text-muted-foreground text-sm'>({task.duration})</span></label>
                                                 <p className="text-sm text-muted-foreground">{format(parseISO(task.date), 'EEE, MMM dd, yyyy')}</p>
                                                 {task.description && <p className="text-sm text-muted-foreground">{task.description}</p>}
+                                                {task.resource && (
+                                                    <a href={task.resource} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1.5 mt-2">
+                                                        <ExternalLink className="h-4 w-4" />
+                                                        <span>Suggested Resource</span>
+                                                    </a>
+                                                )}
                                             </div>
                                         </Card>
                                     ))}

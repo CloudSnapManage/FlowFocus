@@ -27,7 +27,7 @@ const StudyTaskSchema = z.object({
   description: z.string().describe('A brief description of what to cover in the topic.'),
   duration: z.string().describe('Estimated time to complete the task (e.g., "2 hours", "90 minutes").'),
   date: z.string().describe('The scheduled date for this task in YYYY-MM-DD format.'),
-  resource: z.string().optional().describe("An optional URL to a relevant resource (e.g., article or video)."),
+  resource: z.string().optional().describe("A relevant, publicly accessible URL to a resource (e.g., article, video, documentation)."),
 });
 
 const StudyPlanOutputSchema = z.object({
@@ -70,7 +70,8 @@ Preferences and Details: {{{details}}}
 Your task is to generate a comprehensive study plan as a flat list of tasks.
 - Create a concise, engaging title for the entire study plan.
 - Break down the subject into specific, actionable study tasks for each study day.
-- For each task, provide a topic, a brief description, an estimated duration, and an optional resource link.
+- For each task, provide a topic, a brief description, and an estimated duration.
+- For each task, you MUST also suggest a relevant, publicly accessible online resource URL (e.g., a high-quality article, video, or documentation page).
 - Crucially, you must assign a specific date to each task in 'YYYY-MM-DD' format, starting from the user's provided start date and respecting their weekly study frequency.
 - Generate a unique ID for each task, like 't1', 't2', etc.
 

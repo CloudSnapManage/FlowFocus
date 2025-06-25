@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { BrainCircuit, Loader2, Trash2, ArrowLeft, Send, CalendarIcon } from 'lucide-react';
+import { BrainCircuit, Loader2, Trash2, ArrowLeft, Send, CalendarIcon, ExternalLink } from 'lucide-react';
 import type { StudyPlan, StudyTask } from '@/lib/types';
 import { generateStudyPlan, type StudyPlanInput } from '@/ai/flows/generate-study-plan';
 import { useToast } from '@/hooks/use-toast';
@@ -172,6 +172,12 @@ const StudyPlanView = ({ studyPlan, onResetPlan, onSendToPlans, onTaskToggle, pr
                   <div className="grid gap-1.5 leading-none flex-1">
                     <label htmlFor={task.id} className="text-base font-semibold peer-disabled:cursor-not-allowed peer-disabled:opacity-70">{task.topic} <span className="text-sm font-normal text-muted-foreground ml-2">({task.duration})</span><span className="text-sm font-normal text-muted-foreground ml-2">| {format(parseISO(task.date), 'EEE, MMM dd')}</span></label>
                     <p className="text-sm text-muted-foreground">{task.description}</p>
+                    {task.resource && (
+                        <a href={task.resource} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1.5 mt-2">
+                            <ExternalLink className="h-4 w-4" />
+                            <span>Suggested Resource</span>
+                        </a>
+                    )}
                   </div>
                 </CardContent>
               </Card>
