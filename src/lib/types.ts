@@ -35,7 +35,7 @@ export interface Flashcard {
 }
 
 export interface Deck {
-  id: string;
+  id:string;
   name: string;
   description?: string;
   cards: Flashcard[];
@@ -48,5 +48,24 @@ export interface Note {
   tags: string[];
   createdAt: string;
   updatedAt: string;
-  isPinned?: boolean;
+  isPinned: boolean;
+}
+
+export interface StudyTask {
+  id: string;
+  topic: string;
+  description: string;
+  duration: string;
+  completed: boolean;
+}
+
+export interface WeeklyPlan {
+  week: number;
+  theme: string;
+  tasks: StudyTask[];
+}
+
+export interface StudyPlan {
+  goal: string;
+  weeklyPlans: WeeklyPlan[];
 }
