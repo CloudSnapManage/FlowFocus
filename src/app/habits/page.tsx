@@ -8,8 +8,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Flame } from "lucide-react";
-import type { Habit } from "@/lib/types";
+import type { Habit, HabitType } from "@/lib/types";
 
 const initialHabits: Habit[] = [
     { id: 'h1', name: "Read", category: "Mind", type: 'quantitative', streak: 12, completedToday: false, value: 0, target: 30, unit: 'min' },
@@ -22,6 +25,12 @@ const initialHabits: Habit[] = [
 
 export default function HabitsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [newHabitName, setNewHabitName] = useState("");
+  const [newHabitCategory, setNewHabitCategory] = useState("");
+  const [newHabitType, setNewHabitType] = useState<HabitType>("binary");
+  const [newHabitTarget, setNewHabitTarget] = useState(1);
+  const [newHabitUnit, setNewHabitUnit] = useState("");
 
   useEffect(() => {
     const storedHabits = localStorage.getItem('flowfocus_habits');
@@ -54,12 +63,45 @@ export default function HabitsPage() {
     handleHabitChange(habit.id, { value, completedToday });
   };
 
+  const resetNewHabitForm = () => {
+    setNewHabitName("");
+    setNewHabitCategory("");
+    setNewHabitType("binary");
+    setNewHabitTarget(1);
+    setNewHabitUnit("");
+  }
+
+  const handleAddHabit = () => {
+    if (!newHabitName.trim() || !newHabitCategory.trim()) {
+        // TODO: Add toast notification for validation error
+        return;
+    }
+
+    const newHabit: Habit = {
+        id: `h${Date.now()}`,
+        name: newHabitName.trim(),
+        category: newHabitCategory.trim(),
+        type: newHabitType,
+        streak: 0,
+        completedToday: false,
+        value: 0,
+        target: newHabitType === 'binary' ? 1 : newHabitTarget,
+        unit: newHabitType === 'binary' ? '' : newHabitUnit.trim(),
+    };
+
+    setHabits([...habits, newHabit]);
+    resetNewHabitForm();
+    setIsDialogOpen(false);
+  };
+
+
   const groupedHabits = useMemo(() => {
     return habits.reduce((acc, habit) => {
-        if (!acc[habit.category]) {
-            acc[habit.category] = [];
+        const category = habit.category || "Uncategorized";
+        if (!acc[category]) {
+            acc[category] = [];
         }
-        acc[habit.category].push(habit);
+        acc[category].push(habit);
         return acc;
     }, {} as Record<string, Habit[]>);
   }, [habits]);
@@ -73,10 +115,62 @@ export default function HabitsPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Habit Tracker</h1>
           <p className="text-muted-foreground">Build consistent routines and watch your streaks grow.</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          New Habit
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+                <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Habit
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]" onEscapeKeyDown={() => resetNewHabitForm()}>
+                <DialogHeader>
+                    <DialogTitle>Add New Habit</DialogTitle>
+                    <DialogDescription>
+                        Create a new habit to track. You can group it by category.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="name" className="text-right">Name</Label>
+                        <Input id="name" value={newHabitName} onChange={(e) => setNewHabitName(e.target.value)} className="col-span-3" placeholder="e.g., Read a book"/>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="category" className="text-right">Category</Label>
+                        <Input id="category" value={newHabitCategory} onChange={(e) => setNewHabitCategory(e.target.value)} className="col-span-3" placeholder="e.g., Health, Study"/>
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="type" className="text-right">Type</Label>
+                        <Select value={newHabitType} onValueChange={(value) => setNewHabitType(value as HabitType)}>
+                            <SelectTrigger className="col-span-3">
+                                <SelectValue placeholder="Select a type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="binary">Binary (Done/Not Done)</SelectItem>
+                                <SelectItem value="quantitative">Quantitative (e.g., 30 mins)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    {newHabitType === 'quantitative' && (
+                        <>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="target" className="text-right">Target</Label>
+                                <Input id="target" type="number" value={newHabitTarget} onChange={(e) => setNewHabitTarget(Number(e.target.value))} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="unit" className="text-right">Unit</Label>
+                                <Input id="unit" value={newHabitUnit} onChange={(e) => setNewHabitUnit(e.target.value)} className="col-span-3" placeholder="e.g., min, pages, reps" />
+                            </div>
+                        </>
+                    )}
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button type="button" variant="secondary" onClick={resetNewHabitForm}>Cancel</Button>
+                    </DialogClose>
+                    <Button type="button" onClick={handleAddHabit}>Save Habit</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
       </div>
       <Accordion type="multiple" defaultValue={defaultActiveCategories} className="w-full">
         {Object.entries(groupedHabits).map(([category, habitsInCategory]) => (
