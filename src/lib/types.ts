@@ -11,6 +11,7 @@ export interface Habit {
   value: number;
   target: number;
   unit: string;
+  goalStreak?: number;
 }
 
 export type TaskPriority = 'low' | 'medium' | 'high';

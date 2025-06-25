@@ -2,6 +2,10 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Flame } from "lucide-react";
-import type { Habit, HabitType } from "@/lib/types";
+import type { Habit } from "@/lib/types";
 
 const initialHabits: Habit[] = [
     { id: 'h1', name: "Read", category: "Mind", type: 'quantitative', streak: 12, completedToday: false, value: 0, target: 30, unit: 'min' },
@@ -22,16 +27,52 @@ const initialHabits: Habit[] = [
     { id: 'h5', name: "Drink water", category: "Health", type: 'binary', streak: 40, completedToday: false, value: 1, target: 1, unit: '' },
 ];
 
+const habitFormSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters."),
+  category: z.string().min(2, "Category must be at least 2 characters."),
+  type: z.enum(["binary", "quantitative"], { required_error: "You need to select a habit type." }),
+  target: z.coerce.number().min(1).optional(),
+  unit: z.string().optional(),
+  goalStreak: z.coerce.number().min(1).optional(),
+})
+.refine((data) => {
+    if (data.type === 'quantitative') {
+      return !!data.target && data.target > 0;
+    }
+    return true;
+  }, {
+    message: "Target must be a positive number for quantitative habits.",
+    path: ['target'],
+  })
+.refine((data) => {
+    if (data.type === 'quantitative') {
+      return !!data.unit && data.unit.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: "Unit is required for quantitative habits.",
+    path: ['unit'],
+  });
+
 
 export default function HabitsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [newHabitName, setNewHabitName] = useState("");
-  const [newHabitCategory, setNewHabitCategory] = useState("");
-  const [newHabitType, setNewHabitType] = useState<HabitType>("binary");
-  const [newHabitTarget, setNewHabitTarget] = useState(1);
-  const [newHabitUnit, setNewHabitUnit] = useState("");
 
+  const form = useForm<z.infer<typeof habitFormSchema>>({
+    resolver: zodResolver(habitFormSchema),
+    defaultValues: {
+      name: "",
+      category: "",
+      type: "binary",
+      target: 1,
+      unit: "",
+      goalStreak: 21,
+    },
+  });
+
+  const habitType = form.watch("type");
+  
   useEffect(() => {
     const storedHabits = localStorage.getItem('flowfocus_habits');
     if (storedHabits) {
@@ -63,37 +104,24 @@ export default function HabitsPage() {
     handleHabitChange(habit.id, { value, completedToday });
   };
 
-  const resetNewHabitForm = () => {
-    setNewHabitName("");
-    setNewHabitCategory("");
-    setNewHabitType("binary");
-    setNewHabitTarget(1);
-    setNewHabitUnit("");
-  }
-
-  const handleAddHabit = () => {
-    if (!newHabitName.trim() || !newHabitCategory.trim()) {
-        // TODO: Add toast notification for validation error
-        return;
-    }
-
+  function onSubmit(data: z.infer<typeof habitFormSchema>) {
     const newHabit: Habit = {
         id: `h${Date.now()}`,
-        name: newHabitName.trim(),
-        category: newHabitCategory.trim(),
-        type: newHabitType,
+        name: data.name.trim(),
+        category: data.category.trim(),
+        type: data.type,
         streak: 0,
         completedToday: false,
         value: 0,
-        target: newHabitType === 'binary' ? 1 : newHabitTarget,
-        unit: newHabitType === 'binary' ? '' : newHabitUnit.trim(),
+        target: data.type === 'binary' ? 1 : data.target || 1,
+        unit: data.type === 'binary' ? '' : data.unit?.trim() || '',
+        goalStreak: data.goalStreak,
     };
 
-    setHabits([...habits, newHabit]);
-    resetNewHabitForm();
+    setHabits(currentHabits => [...currentHabits, newHabit]);
+    form.reset();
     setIsDialogOpen(false);
-  };
-
+  }
 
   const groupedHabits = useMemo(() => {
     return habits.reduce((acc, habit) => {
@@ -115,60 +143,136 @@ export default function HabitsPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Habit Tracker</h1>
           <p className="text-muted-foreground">Build consistent routines and watch your streaks grow.</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) {
+                form.reset();
+            }
+        }}>
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     New Habit
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]" onEscapeKeyDown={() => resetNewHabitForm()}>
+            <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader>
                     <DialogTitle>Add New Habit</DialogTitle>
                     <DialogDescription>
                         Create a new habit to track. You can group it by category.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">Name</Label>
-                        <Input id="name" value={newHabitName} onChange={(e) => setNewHabitName(e.target.value)} className="col-span-3" placeholder="e.g., Read a book"/>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="category" className="text-right">Category</Label>
-                        <Input id="category" value={newHabitCategory} onChange={(e) => setNewHabitCategory(e.target.value)} className="col-span-3" placeholder="e.g., Health, Study"/>
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="type" className="text-right">Type</Label>
-                        <Select value={newHabitType} onValueChange={(value) => setNewHabitType(value as HabitType)}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Select a type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="binary">Binary (Done/Not Done)</SelectItem>
-                                <SelectItem value="quantitative">Quantitative (e.g., 30 mins)</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    {newHabitType === 'quantitative' && (
-                        <>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="target" className="text-right">Target</Label>
-                                <Input id="target" type="number" value={newHabitTarget} onChange={(e) => setNewHabitTarget(Number(e.target.value))} className="col-span-3" />
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="name"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Read a book" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="category"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Category</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Health, Study" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="type"
+                            render={({ field }) => (
+                                <FormItem className="space-y-3">
+                                <FormLabel>Type</FormLabel>
+                                <FormControl>
+                                    <RadioGroup
+                                    onValueChange={field.onChange}
+                                    defaultValue={field.value}
+                                    className="flex space-x-4"
+                                    >
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="binary" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">Binary (Done/Not Done)</FormLabel>
+                                    </FormItem>
+                                    <FormItem className="flex items-center space-x-2 space-y-0">
+                                        <FormControl>
+                                        <RadioGroupItem value="quantitative" />
+                                        </FormControl>
+                                        <FormLabel className="font-normal">Quantitative</FormLabel>
+                                    </FormItem>
+                                    </RadioGroup>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        {habitType === 'quantitative' && (
+                             <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="target"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Target</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="unit"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Unit</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g., min, pages" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             </div>
-                            <div className="grid grid-cols-4 items-center gap-4">
-                                <Label htmlFor="unit" className="text-right">Unit</Label>
-                                <Input id="unit" value={newHabitUnit} onChange={(e) => setNewHabitUnit(e.target.value)} className="col-span-3" placeholder="e.g., min, pages, reps" />
-                            </div>
-                        </>
-                    )}
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="secondary" onClick={resetNewHabitForm}>Cancel</Button>
-                    </DialogClose>
-                    <Button type="button" onClick={handleAddHabit}>Save Habit</Button>
-                </DialogFooter>
+                        )}
+                        <FormField
+                            control={form.control}
+                            name="goalStreak"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Streak Goal (Optional)</FormLabel>
+                                    <FormControl>
+                                        <Input type="number" placeholder="e.g., 21" {...field} />
+                                    </FormControl>
+                                    <FormDescription>Set a desired streak goal to work towards.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <DialogFooter>
+                            <DialogClose asChild>
+                                <Button type="button" variant="secondary">Cancel</Button>
+                            </DialogClose>
+                            <Button type="submit">Save Habit</Button>
+                        </DialogFooter>
+                    </form>
+                </Form>
             </DialogContent>
         </Dialog>
       </div>
