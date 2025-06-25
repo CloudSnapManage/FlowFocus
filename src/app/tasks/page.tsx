@@ -8,7 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import type { Task, Habit } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Plus, Tag, CalendarIcon, MoreVertical, Pencil, Trash2 } from "lucide-react";
@@ -432,4 +432,5 @@ export default function TasksPage() {
             </AlertDialog>
         </div>
     );
-}
+
+    
