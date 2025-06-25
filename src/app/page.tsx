@@ -96,7 +96,7 @@ export default function DashboardPage() {
             <CardContent>
               {todaysAgenda.length > 0 ? (
                 <div className="space-y-4">
-                  {todaysAgenda.map(item => (
+                  {todaysAgenda.slice(0, 5).map(item => (
                     <div key={item.id} className="flex items-center gap-4 p-3 rounded-lg border bg-background hover:bg-muted/50 transition-colors">
                       <div className="flex-shrink-0">
                         {'planTitle' in item ? <BookOpen className="w-5 h-5 text-purple-500" /> : <ListTodo className="w-5 h-5 text-blue-500" />}
@@ -123,6 +123,11 @@ export default function DashboardPage() {
                       </div>
                     </div>
                   ))}
+                  {todaysAgenda.length > 5 && (
+                    <p className="text-sm text-center text-muted-foreground pt-2">
+                      ...and {todaysAgenda.length - 5} more.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <div className="text-center text-muted-foreground py-8">
