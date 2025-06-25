@@ -1,8 +1,9 @@
+
 "use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BrainCircuit, Copy, LayoutDashboard, NotebookText, Repeat, Timer } from "lucide-react"
+import { BrainCircuit, Copy, LayoutDashboard, ListTodo, NotebookText, Repeat, Timer } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
@@ -10,6 +11,7 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/pomodoro", label: "Pomodoro", icon: Timer },
+  { href: "/tasks", label: "Tasks", icon: ListTodo },
   { href: "/habits", label: "Habit Tracker", icon: Repeat },
   { href: "/flashcards", label: "Flashcards", icon: Copy },
   { href: "/notes", label: "Notes", icon: NotebookText },

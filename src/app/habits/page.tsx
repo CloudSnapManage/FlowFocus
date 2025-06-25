@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,33 +9,34 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Plus, Flame } from "lucide-react";
-
-type HabitType = 'binary' | 'quantitative';
-
-interface Habit {
-  id: string;
-  name: string;
-  category: string;
-  type: HabitType;
-  streak: number;
-  completedToday: boolean;
-  // For quantitative habits
-  value: number;
-  target: number;
-  unit: string;
-}
+import type { Habit } from "@/lib/types";
 
 const initialHabits: Habit[] = [
-    { id: 'h1', name: "Read", category: "Mind", type: 'quantitative', streak: 12, completedToday: true, value: 30, target: 30, unit: 'min' },
+    { id: 'h1', name: "Read", category: "Mind", type: 'quantitative', streak: 12, completedToday: false, value: 0, target: 30, unit: 'min' },
     { id: 'h2', name: "Workout", category: "Health", type: 'binary', streak: 5, completedToday: false, value: 0, target: 1, unit: '' },
-    { id: 'h3', name: "Code", category: "Work", type: 'quantitative', streak: 27, completedToday: true, value: 75, target: 60, unit: 'min' },
+    { id: 'h3', name: "Code", category: "Work", type: 'quantitative', streak: 27, completedToday: false, value: 0, target: 60, unit: 'min' },
     { id: 'h4', name: "Meditate", category: "Mind", type: 'binary', streak: 2, completedToday: false, value: 0, target: 1, unit: '' },
-    { id: 'h5', name: "Drink water", category: "Health", type: 'binary', streak: 40, completedToday: true, value: 1, target: 1, unit: '' },
+    { id: 'h5', name: "Drink water", category: "Health", type: 'binary', streak: 40, completedToday: false, value: 1, target: 1, unit: '' },
 ];
 
 
 export default function HabitsPage() {
-  const [habits, setHabits] = useState<Habit[]>(initialHabits);
+  const [habits, setHabits] = useState<Habit[]>([]);
+
+  useEffect(() => {
+    const storedHabits = localStorage.getItem('flowfocus_habits');
+    if (storedHabits) {
+        setHabits(JSON.parse(storedHabits));
+    } else {
+        setHabits(initialHabits);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (habits.length > 0) {
+      localStorage.setItem('flowfocus_habits', JSON.stringify(habits));
+    }
+  }, [habits]);
 
   const handleHabitChange = (id: string, newProps: Partial<Habit>) => {
     setHabits(currentHabits =>
@@ -51,7 +53,6 @@ export default function HabitsPage() {
     const completedToday = habit.target > 0 ? value >= habit.target : false;
     handleHabitChange(habit.id, { value, completedToday });
   };
-
 
   const groupedHabits = useMemo(() => {
     return habits.reduce((acc, habit) => {

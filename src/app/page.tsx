@@ -1,17 +1,47 @@
+
+"use client"
+
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { BrainCircuit, Copy, NotebookText, Repeat, Timer } from "lucide-react";
+import { BrainCircuit, Copy, NotebookText, Repeat, Timer, ListTodo } from "lucide-react";
 import Link from "next/link";
 import { PomodoroChart } from "@/components/pomodoro-chart";
+import React, { useEffect, useState } from "react";
+import type { Habit, Task } from "@/lib/types";
+import { Progress } from "@/components/ui/progress";
 
 
 export default function DashboardPage() {
+  const [habits, setHabits] = useState<Habit[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  
+  useEffect(() => {
+    const storedHabits = localStorage.getItem('flowfocus_habits');
+    if (storedHabits) {
+      setHabits(JSON.parse(storedHabits));
+    }
+    const storedTasks = localStorage.getItem('flowfocus_tasks');
+    if (storedTasks) {
+      setTasks(JSON.parse(storedTasks));
+    }
+  }, []);
+
   const features = [
     { title: "Pomodoro Timer", description: "Stay focused with the Pomodoro technique.", icon: Timer, href: "/pomodoro" },
+    { title: "Tasks", description: "Manage your to-do list for the day.", icon: ListTodo, href: "/tasks" },
     { title: "Habit Tracker", description: "Build good habits and track your progress.", icon: Repeat, href: "/habits" },
     { title: "Flashcards", description: "Review and memorize with digital flashcards.", icon: Copy, href: "/flashcards" },
     { title: "Notes", description: "Capture your thoughts with Markdown support.", icon: NotebookText, href: "/notes" },
     { title: "AI Study Plan", description: "Generate a personalized study plan.", icon: BrainCircuit, href: "/study-plan" },
   ];
+
+  const completedHabits = habits.filter(h => h.completedToday).length;
+  const totalHabits = habits.length;
+  const habitProgress = totalHabits > 0 ? (completedHabits / totalHabits) * 100 : 0;
+
+  const completedTasks = tasks.filter(t => t.completed).length;
+  const totalTasks = tasks.length;
+  const taskProgress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -38,21 +68,23 @@ export default function DashboardPage() {
         <PomodoroChart />
         <Card>
           <CardHeader>
-            <CardTitle>Habit Streaks</CardTitle>
-            <CardDescription>Your current active streaks.</CardDescription>
+            <CardTitle>Today's Progress</CardTitle>
+            <CardDescription>A summary of your completed habits and tasks.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Workout</span>
-              <span className="font-bold">12 days</span>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">Habits Completed</span>
+                <span className="text-sm text-muted-foreground">{completedHabits} of {totalHabits}</span>
+              </div>
+              <Progress value={habitProgress} />
             </div>
-             <div className="flex items-center justify-between">
-              <span className="text-sm">Read</span>
-              <span className="font-bold">5 days</span>
-            </div>
-             <div className="flex items-center justify-between">
-              <span className="text-sm">Code</span>
-              <span className="font-bold">27 days</span>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-sm font-medium">Tasks Completed</span>
+                <span className="text-sm text-muted-foreground">{completedTasks} of {totalTasks}</span>
+              </div>
+              <Progress value={taskProgress} />
             </div>
           </CardContent>
         </Card>
