@@ -136,13 +136,13 @@ body {
   }
 
   /* Custom styles for MD Editor Rose Theme */
-  .rose [data-color-mode="dark"] {
-    --wmde-background: hsl(var(--card));
+  .rose .wmde-markdown-var[data-color-mode="dark"] {
+    --wmde-background: hsl(var(--background));
     --wmde-color: hsl(var(--card-foreground));
     --wmde-border: hsl(var(--border));
     
-    --wmde-markdown-bg: hsl(var(--card));
-    --wmde-preview-bg: hsl(var(--card));
+    --wmde-markdown-bg: hsl(var(--background));
+    --wmde-preview-bg: hsl(var(--background));
 
     --wmde-command-button-hover-bg: hsl(var(--secondary));
     --wmde-command-button-color: hsl(var(--foreground));
@@ -152,8 +152,8 @@ body {
     --wmde-command-icon-active-color: hsl(var(--primary-foreground));
   }
   
-  .rose .wm-preview-content[data-color-mode*="dark"] {
-    --color-canvas-default: hsl(var(--card));
+  .rose .wmde-markdown-var .wm-preview-content[data-color-mode*="dark"] {
+    --color-canvas-default: hsl(var(--background));
     --color-fg-default: hsl(var(--card-foreground));
     --color-border-default: hsl(var(--border));
     --color-accent-fg: hsl(var(--primary));
