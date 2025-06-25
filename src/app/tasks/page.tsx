@@ -114,6 +114,7 @@ export default function TasksPage() {
     };
 
     function onSubmit(data: z.infer<typeof taskFormSchema>) {
+        const newHabitId = data.habitId === 'none' || !data.habitId ? undefined : data.habitId;
         const newTask: Task = {
             id: `t${Date.now()}`,
             name: data.name,
@@ -122,7 +123,7 @@ export default function TasksPage() {
             completed: false,
             dueDate: data.dueDate ? data.dueDate.toISOString() : null,
             priority: data.priority as 'low' | 'medium' | 'high',
-            habitId: data.habitId,
+            habitId: newHabitId,
         };
         setTasks((currentTasks) => [...currentTasks, newTask]);
         form.reset();
@@ -277,7 +278,7 @@ export default function TasksPage() {
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="">None</SelectItem>
+                                                    <SelectItem value="none">None</SelectItem>
                                                     {habits.map((habit) => (
                                                         <SelectItem key={habit.id} value={habit.id}>{habit.name}</SelectItem>
                                                     ))}
