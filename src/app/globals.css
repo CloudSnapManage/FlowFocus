@@ -134,4 +134,29 @@ body {
   .rotate-y-180 {
     transform: rotateY(180deg);
   }
+
+  /* Custom styles for MD Editor Rose Theme */
+  .rose [data-color-mode="dark"] {
+    --wmde-background: hsl(var(--card));
+    --wmde-color: hsl(var(--card-foreground));
+    --wmde-border: hsl(var(--border));
+    
+    --wmde-markdown-bg: hsl(var(--card));
+    --wmde-preview-bg: hsl(var(--card));
+
+    --wmde-command-button-hover-bg: hsl(var(--secondary));
+    --wmde-command-button-color: hsl(var(--foreground));
+    --wmde-command-icon-color: hsl(var(--foreground));
+    --wmde-command-button-active-bg: hsl(var(--primary));
+    --wmde-command-button-active-color: hsl(var(--primary-foreground));
+    --wmde-command-icon-active-color: hsl(var(--primary-foreground));
+  }
+  
+  .rose .wm-preview-content[data-color-mode*="dark"] {
+    --color-canvas-default: hsl(var(--card));
+    --color-fg-default: hsl(var(--card-foreground));
+    --color-border-default: hsl(var(--border));
+    --color-accent-fg: hsl(var(--primary));
+    --color-prettylights-syntax-string: hsl(var(--primary));
+  }
 }
