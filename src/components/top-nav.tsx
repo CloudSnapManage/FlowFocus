@@ -43,7 +43,7 @@ export function TopNav({ isExiting = false }: { isExiting?: boolean }) {
                 variant={isActive(item.href) ? "secondary" : "ghost"}
                 size="icon"
                 className={cn(
-                  "h-12 w-12 transform transition-transform duration-200 hover:scale-110 opacity-0",
+                  "h-12 w-12 transform transition-transform duration-200 hover:scale-110",
                   isExiting ? 'animate-lift-up-and-out' : 'animate-drop-in'
                 )}
                 style={{ animationDelay: isExiting ? `${(navItems.length - index -1) * 50}ms` : `${index * 50}ms` }}
