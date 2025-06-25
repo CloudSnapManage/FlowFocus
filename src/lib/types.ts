@@ -39,3 +39,12 @@ export interface Deck {
   description?: string;
   cards: Flashcard[];
 }
+
+export interface Note {
+  id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
