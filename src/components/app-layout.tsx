@@ -14,24 +14,10 @@ import { cn } from "@/lib/utils";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
     const { layout } = useLayout();
-    const [activeLayout, setActiveLayout] = useState(layout);
-    const [isExiting, setIsExiting] = useState(false);
 
-    useEffect(() => {
-        if (layout !== activeLayout && !isExiting) {
-            setIsExiting(true);
-            const timer = setTimeout(() => {
-                setActiveLayout(layout);
-                setIsExiting(false);
-            }, 300); // Duration of the exit animation
-
-            return () => clearTimeout(timer);
-        }
-    }, [layout, activeLayout, isExiting]);
-
-    if (activeLayout === 'default') {
+    if (layout === 'default') {
         return (
-            <SidebarProvider className={cn(isExiting ? 'animate-slide-out-to-left' : 'animate-slide-in-from-left')}>
+            <SidebarProvider key="default-layout" className="animate-slide-in-from-left">
                 <Sidebar>
                     <SidebarHeader>
                         <div className="p-2">
@@ -62,9 +48,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         );
     }
 
-    if (activeLayout === 'top-nav') {
+    if (layout === 'top-nav') {
         return (
-            <div className="flex min-h-screen flex-col">
+            <div key="top-nav-layout" className="flex min-h-screen flex-col">
                 <header className="sticky top-0 z-40 w-full border-b bg-card">
                     <div className="grid h-20 grid-cols-3 items-center px-4 md:px-6">
                         <div className="justify-self-start">
@@ -74,7 +60,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                             </Link>
                         </div>
                         <div className="justify-self-center">
-                            <TopNav isExiting={isExiting} />
+                            <TopNav />
                         </div>
                         <div className="flex items-center justify-self-end">
                             <UserNav />

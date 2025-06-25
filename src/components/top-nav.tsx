@@ -25,7 +25,7 @@ const navItems = [
   { href: "/study-plans", label: "Study Plans", icon: BookMarked },
 ]
 
-export function TopNav({ isExiting = false }: { isExiting?: boolean }) {
+export function TopNav() {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -43,10 +43,9 @@ export function TopNav({ isExiting = false }: { isExiting?: boolean }) {
                 variant={isActive(item.href) ? "secondary" : "ghost"}
                 size="icon"
                 className={cn(
-                  "h-12 w-12 transform transition-transform duration-200 hover:scale-110",
-                  isExiting ? 'animate-lift-up-and-out' : 'animate-drop-in'
+                  "h-12 w-12 transform transition-transform duration-200 hover:scale-110 animate-drop-in"
                 )}
-                style={{ animationDelay: isExiting ? `${(navItems.length - index -1) * 50}ms` : `${index * 50}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 <Link href={item.href}>
                   <item.icon className="h-6 w-6" />
