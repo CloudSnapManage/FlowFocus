@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Shuffle, Pencil, Trash2, Home, List } from "lucide-react";
@@ -29,7 +30,10 @@ const cardFormSchema = z.object({
   answer: z.string().min(1, 'Answer cannot be empty.'),
 });
 
-export default function DeckPage({ params }: { params: { deckId: string } }) {
+export default function DeckPage() {
+  const params = useParams();
+  const deckId = params.deckId as string;
+
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cardOrder, setCardOrder] = useState<string[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,13 +54,13 @@ export default function DeckPage({ params }: { params: { deckId: string } }) {
     const storedDecks = localStorage.getItem("flowfocus_decks");
     if (storedDecks) {
       const decks: Deck[] = JSON.parse(storedDecks);
-      const currentDeck = decks.find(d => d.id === params.deckId);
+      const currentDeck = decks.find(d => d.id === deckId);
       if (currentDeck) {
         setDeck(currentDeck);
         setCardOrder(currentDeck.cards.map(c => c.id));
       }
     }
-  }, [params.deckId]);
+  }, [deckId]);
   
   const updateDeckInStorage = (updatedDeck: Deck) => {
     const storedDecks = localStorage.getItem("flowfocus_decks");
