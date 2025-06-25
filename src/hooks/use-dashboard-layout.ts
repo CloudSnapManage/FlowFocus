@@ -51,7 +51,8 @@ export function useDashboardLayout() {
   useEffect(() => {
     try {
       const savedLayouts = localStorage.getItem(LAYOUT_STORAGE_KEY);
-      if (savedLayouts) {
+      // Ensure savedLayouts is a valid, non-empty, non-undefined string before parsing
+      if (savedLayouts && savedLayouts !== 'undefined' && savedLayouts !== 'null') {
         const parsedLayouts = JSON.parse(savedLayouts);
         // Validate saved layout to prevent crashes from malformed data
         if (parsedLayouts && parsedLayouts.lg) {
@@ -59,19 +60,24 @@ export function useDashboardLayout() {
         } else {
           setLayouts(defaultLayouts);
         }
+      } else {
+        setLayouts(defaultLayouts);
       }
     } catch (error) {
-      console.error("Failed to load dashboard layout from localStorage", error);
+      console.error("Failed to load dashboard layout from localStorage, resetting to default.", error);
       setLayouts(defaultLayouts);
     }
   }, []);
 
   const onLayoutChange = useCallback((layout: any, newLayouts: Layouts) => {
-    setLayouts(newLayouts);
-    try {
+    // Only update state and localStorage if newLayouts is valid
+    if (newLayouts) {
+      setLayouts(newLayouts);
+      try {
         localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(newLayouts));
-    } catch (error) {
+      } catch (error) {
         console.error("Failed to save dashboard layout to localStorage", error);
+      }
     }
   }, []);
 
