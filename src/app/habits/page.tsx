@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Flame, Pencil, MoreVertical, Trash2 } from "lucide-react";
 import type { Habit } from "@/lib/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -124,12 +123,10 @@ export default function HabitsPage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Habit Tracker</h1>
           <p className="text-muted-foreground">Build consistent routines and watch your streaks grow.</p>
         </div>
-        <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog(null)}>
-                <Plus className="mr-2 h-4 w-4" />
-                New Habit
-            </Button>
-        </DialogTrigger>
+        <Button onClick={() => handleOpenDialog(null)}>
+            <Plus className="mr-2 h-4 w-4" />
+            New Habit
+        </Button>
       </div>
       <Accordion type="multiple" defaultValue={defaultActiveCategories} className="w-full">
         {Object.entries(groupedHabits).map(([category, habitsInCategory]) => (

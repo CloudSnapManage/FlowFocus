@@ -14,9 +14,6 @@ import {
 } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -112,11 +109,9 @@ export default function FlashcardsHomePage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Flashcard Decks</h1>
           <p className="text-muted-foreground">Create and manage your study decks.</p>
         </div>
-        <DialogTrigger asChild>
-            <Button onClick={() => openFormDialog(null)}>
-                <Plus className="mr-2 h-4 w-4" /> New Deck
-            </Button>
-        </DialogTrigger>
+        <Button onClick={() => openFormDialog(null)}>
+            <Plus className="mr-2 h-4 w-4" /> New Deck
+        </Button>
       </div>
 
       {decks.length > 0 ? (

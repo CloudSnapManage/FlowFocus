@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Shuffle, Pencil, Trash2, Home, List } from "lucide-react";
 import type { Deck, Flashcard } from '@/lib/types';
-import { DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
 import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
 import { CardFormDialog, type CardFormData } from '@/components/card-form-dialog';
@@ -155,11 +154,9 @@ export default function DeckPage() {
             <Button variant="outline" asChild>
                 <Link href="/flashcards"><Home className='mr-2 h-4 w-4'/> All Decks</Link>
             </Button>
-            <DialogTrigger asChild>
-                <Button onClick={() => openCardForm(null)}>
-                    <Plus className="mr-2 h-4 w-4" /> Add Card
-                </Button>
-            </DialogTrigger>
+            <Button onClick={() => openCardForm(null)}>
+                <Plus className="mr-2 h-4 w-4" /> Add Card
+            </Button>
         </div>
       </div>
       

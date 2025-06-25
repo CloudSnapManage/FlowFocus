@@ -11,7 +11,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Plus, Tag, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { DialogTrigger } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
@@ -147,12 +146,10 @@ export default function TasksPage() {
                     <h1 className="text-3xl font-bold font-headline tracking-tight">Tasks</h1>
                     <p className="text-muted-foreground">Manage your daily routines and one-time to-dos.</p>
                 </div>
-                <DialogTrigger asChild>
-                    <Button onClick={() => openDialogForTask(null)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        New Task
-                    </Button>
-                </DialogTrigger>
+                <Button onClick={() => openDialogForTask(null)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Task
+                </Button>
             </div>
             <Accordion type="multiple" defaultValue={defaultActiveCategories} className="w-full">
                 {Object.entries(groupedTasks).map(([category, tasksInCategory]) => (
