@@ -33,6 +33,7 @@ export default function RootLayout({
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
+          themes={['light', 'dark', 'system', 'rose']}
         >
           <SidebarProvider>
             <Sidebar>
