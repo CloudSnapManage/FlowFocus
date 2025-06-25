@@ -16,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Plus, Flame } from "lucide-react";
+import { Plus, Flame, Pencil } from "lucide-react";
 import type { Habit } from "@/lib/types";
 
 const initialHabits: Habit[] = [
@@ -58,6 +58,7 @@ const habitFormSchema = z.object({
 export default function HabitsPage() {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
   const form = useForm<z.infer<typeof habitFormSchema>>({
     resolver: zodResolver(habitFormSchema),
@@ -104,23 +105,61 @@ export default function HabitsPage() {
     handleHabitChange(habit.id, { value, completedToday });
   };
 
+  const openDialogForHabit = (habit: Habit | null) => {
+    setEditingHabit(habit);
+    if (habit) {
+      form.reset({
+        name: habit.name,
+        category: habit.category,
+        type: habit.type,
+        target: habit.type === 'quantitative' ? habit.target : 1,
+        unit: habit.unit,
+        goalStreak: habit.goalStreak,
+      });
+    } else {
+      form.reset({
+        name: "",
+        category: "",
+        type: "binary",
+        target: 1,
+        unit: "",
+        goalStreak: 21,
+      });
+    }
+    setIsDialogOpen(true);
+  };
+
   function onSubmit(data: z.infer<typeof habitFormSchema>) {
-    const newHabit: Habit = {
-        id: `h${Date.now()}`,
+    if (editingHabit) {
+      const updatedHabit = {
+        ...editingHabit,
         name: data.name.trim(),
         category: data.category.trim(),
         type: data.type,
-        streak: 0,
-        completedToday: false,
-        value: 0,
         target: data.type === 'binary' ? 1 : data.target || 1,
         unit: data.type === 'binary' ? '' : data.unit?.trim() || '',
         goalStreak: data.goalStreak,
-    };
+      };
+      setHabits(habits.map(h => h.id === editingHabit.id ? updatedHabit : h));
+    } else {
+      const newHabit: Habit = {
+          id: `h${Date.now()}`,
+          name: data.name.trim(),
+          category: data.category.trim(),
+          type: data.type,
+          streak: 0,
+          completedToday: false,
+          value: 0,
+          target: data.type === 'binary' ? 1 : data.target || 1,
+          unit: data.type === 'binary' ? '' : data.unit?.trim() || '',
+          goalStreak: data.goalStreak,
+      };
 
-    setHabits(currentHabits => [...currentHabits, newHabit]);
-    form.reset();
+      setHabits(currentHabits => [...currentHabits, newHabit]);
+    }
+    
     setIsDialogOpen(false);
+    setEditingHabit(null);
   }
 
   const groupedHabits = useMemo(() => {
@@ -147,19 +186,20 @@ export default function HabitsPage() {
             setIsDialogOpen(open);
             if (!open) {
                 form.reset();
+                setEditingHabit(null);
             }
         }}>
             <DialogTrigger asChild>
-                <Button>
+                <Button onClick={() => openDialogForHabit(null)}>
                     <Plus className="mr-2 h-4 w-4" />
                     New Habit
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[480px]">
                 <DialogHeader>
-                    <DialogTitle>Add New Habit</DialogTitle>
+                    <DialogTitle>{editingHabit ? 'Edit Habit' : 'Add New Habit'}</DialogTitle>
                     <DialogDescription>
-                        Create a new habit to track. You can group it by category.
+                        {editingHabit ? "Make changes to your habit." : "Create a new habit to track. You can group it by category."}
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -295,11 +335,16 @@ export default function HabitsPage() {
                                         {habit.streak > 0 ? `${habit.streak} day streak` : "No streak yet"}
                                     </CardDescription>
                                     </div>
-                                    {habit.type === 'binary' && (
-                                        <div className="flex items-center space-x-2 pt-1">
-                                            <Checkbox checked={habit.completedToday} onClick={() => handleBinaryToggle(habit)} id={habit.id} aria-label={`Mark ${habit.name} as completed`} />
-                                        </div>
-                                    )}
+                                    <div className="flex items-center space-x-1">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openDialogForHabit(habit)}>
+                                            <Pencil className="h-4 w-4" />
+                                        </Button>
+                                        {habit.type === 'binary' && (
+                                            <div className="flex items-center space-x-2 pt-1">
+                                                <Checkbox checked={habit.completedToday} onClick={() => handleBinaryToggle(habit)} id={habit.id} aria-label={`Mark ${habit.name} as completed`} />
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                                 </CardHeader>
                                 <CardContent>
