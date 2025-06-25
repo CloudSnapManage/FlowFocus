@@ -3,34 +3,83 @@
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Pause, Play, TimerReset } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Pause, Play, TimerReset, Settings } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogDescription,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { format } from "date-fns";
+
+type Mode = "pomodoro" | "shortBreak" | "longBreak";
 
 export default function PomodoroPage() {
-  const [mode, setMode] = useState<"pomodoro" | "shortBreak" | "longBreak">("pomodoro");
+  const [mode, setMode] = useState<Mode>("pomodoro");
   const [time, setTime] = useState(25 * 60);
   const [isActive, setIsActive] = useState(false);
+  const [settings, setSettings] = useState({ pomodoro: 25, shortBreak: 5, longBreak: 15 });
+  const [tempSettings, setTempSettings] = useState(settings);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [audio, setAudio] = useState<HTMLAudioElement | null>(null);
 
-  const timeSettings = {
-    pomodoro: 25 * 60,
-    shortBreak: 5 * 60,
-    longBreak: 15 * 60,
-  };
+  useEffect(() => {
+    // Load settings from local storage on mount
+    const savedSettings = localStorage.getItem("pomodoro_settings");
+    if (savedSettings) {
+      const parsedSettings = JSON.parse(savedSettings);
+      setSettings(parsedSettings);
+      setTempSettings(parsedSettings);
+      setTime(parsedSettings.pomodoro * 60);
+    }
+
+    // Request notification permission
+    if ("Notification" in window && Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
+    
+    // Set up audio - you'll need to place a sound file at this path
+    setAudio(new Audio('/sounds/notification.mp3'));
+  }, []);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
     if (isActive && time > 0) {
       interval = setInterval(() => {
-        setTime((time) => time - 1);
+        setTime((t) => t - 1);
       }, 1000);
-    } else if (time === 0) {
+    } else if (time === 0 && isActive) {
       setIsActive(false);
-      // Here you can add notification logic
+      
+      // Play sound and show notification
+      audio?.play();
+      const notificationTitle = `${mode.charAt(0).toUpperCase() + mode.slice(1)} Finished!`;
+      const notificationBody = mode === "pomodoro" ? "Time for a break!" : "Time to get back to focus!";
+      new Notification(notificationTitle, { body: notificationBody });
+      
+      // Track completed pomodoro sessions
+      if (mode === 'pomodoro') {
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const sessions = JSON.parse(localStorage.getItem('pomodoro_sessions') || '{}');
+        sessions[today] = (sessions[today] || 0) + 1;
+        localStorage.setItem('pomodoro_sessions', JSON.stringify(sessions));
+      }
+      
+      // Automatically switch to the next mode
+      const nextMode = mode === 'pomodoro' ? 'shortBreak' : 'pomodoro';
+      handleModeChange(nextMode);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, time]);
+  }, [isActive, time, mode, audio, settings]);
   
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -38,14 +87,25 @@ export default function PomodoroPage() {
 
   const resetTimer = () => {
     setIsActive(false);
-    setTime(timeSettings[mode]);
+    setTime(settings[mode] * 60);
   };
   
-  const handleModeChange = (newMode: "pomodoro" | "shortBreak" | "longBreak") => {
+  const handleModeChange = (newMode: Mode) => {
     setMode(newMode);
     setIsActive(false);
-    setTime(timeSettings[newMode]);
+    setTime(settings[newMode] * 60);
   }
+
+  const handleSaveSettings = () => {
+    setSettings(tempSettings);
+    localStorage.setItem("pomodoro_settings", JSON.stringify(tempSettings));
+    setIsSettingsOpen(false);
+
+    // Update timer if not active
+    if (!isActive) {
+      setTime(tempSettings[mode] * 60);
+    }
+  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -53,7 +113,7 @@ export default function PomodoroPage() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
   
-  const progress = ((timeSettings[mode] - time) / timeSettings[mode]) * 100;
+  const progress = ((settings[mode] * 60 - time) / (settings[mode] * 60)) * 100;
 
   return (
     <div className="flex items-center justify-center py-12">
@@ -63,11 +123,11 @@ export default function PomodoroPage() {
           <CardDescription className="text-center">Stay focused and get things done.</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-6">
-          <Tabs defaultValue="pomodoro" className="w-full">
+          <Tabs value={mode} onValueChange={(v) => handleModeChange(v as Mode)} className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="pomodoro" onClick={() => handleModeChange('pomodoro')}>Focus</TabsTrigger>
-              <TabsTrigger value="shortBreak" onClick={() => handleModeChange('shortBreak')}>Short Break</TabsTrigger>
-              <TabsTrigger value="longBreak" onClick={() => handleModeChange('longBreak')}>Long Break</TabsTrigger>
+              <TabsTrigger value="pomodoro">Focus</TabsTrigger>
+              <TabsTrigger value="shortBreak">Short Break</TabsTrigger>
+              <TabsTrigger value="longBreak">Long Break</TabsTrigger>
             </TabsList>
           </Tabs>
           <div className="relative h-64 w-64">
@@ -89,15 +149,49 @@ export default function PomodoroPage() {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-center gap-4">
-            <Button size="lg" className="w-36" onClick={toggleTimer}>
+        <CardFooter className="flex justify-center items-center gap-4">
+            <Button size="lg" className="w-40" onClick={toggleTimer}>
               {isActive ? <Pause className="mr-2"/> : <Play className="mr-2"/>}
               {isActive ? 'Pause' : 'Start'}
             </Button>
-            <Button size="lg" variant="outline" onClick={resetTimer}>
-                <TimerReset className="mr-2" />
-                Reset
+            <Button variant="outline" size="icon" onClick={resetTimer} aria-label="Reset timer">
+                <TimerReset />
             </Button>
+            <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+                <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Timer settings">
+                        <Settings />
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                    <DialogTitle>Timer Settings</DialogTitle>
+                    <DialogDescription>
+                        Customize your session durations (in minutes).
+                    </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="pomodoro" className="text-right">Focus</Label>
+                            <Input id="pomodoro" type="number" value={tempSettings.pomodoro} onChange={(e) => setTempSettings({...tempSettings, pomodoro: Number(e.target.value)})} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="shortBreak" className="text-right">Short Break</Label>
+                            <Input id="shortBreak" type="number" value={tempSettings.shortBreak} onChange={(e) => setTempSettings({...tempSettings, shortBreak: Number(e.target.value)})} className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="longBreak" className="text-right">Long Break</Label>
+                            <Input id="longBreak" type="number" value={tempSettings.longBreak} onChange={(e) => setTempSettings({...tempSettings, longBreak: Number(e.target.value)})} className="col-span-3" />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild>
+                           <Button type="button" variant="secondary">Cancel</Button>
+                        </DialogClose>
+                        <Button type="submit" onClick={handleSaveSettings}>Save Changes</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </CardFooter>
       </Card>
     </div>

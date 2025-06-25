@@ -7,16 +7,8 @@ import {
 } from "@/components/ui/chart"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-
-const chartData = [
-  { day: "Monday", sessions: 4 },
-  { day: "Tuesday", sessions: 3 },
-  { day: "Wednesday", sessions: 5 },
-  { day: "Thursday", sessions: 2 },
-  { day: "Friday", sessions: 6 },
-  { day: "Saturday", sessions: 1 },
-  { day: "Sunday", sessions: 4 },
-]
+import React, { useEffect, useState } from "react";
+import { format, subDays } from "date-fns";
 
 const chartConfig = {
   sessions: {
@@ -26,6 +18,23 @@ const chartConfig = {
 }
 
 export function PomodoroChart() {
+    const [chartData, setChartData] = useState<{day: string; sessions: number}[]>([]);
+
+    useEffect(() => {
+        const sessions = JSON.parse(localStorage.getItem('pomodoro_sessions') || '{}');
+        const data = [];
+        for (let i = 6; i >= 0; i--) {
+            const date = subDays(new Date(), i);
+            const dateString = format(date, 'yyyy-MM-dd');
+            const dayName = format(date, 'eee');
+            data.push({
+                day: dayName,
+                sessions: sessions[dateString] || 0,
+            });
+        }
+        setChartData(data);
+    }, []);
+
     return (
         <Card>
           <CardHeader>
@@ -41,7 +50,6 @@ export function PomodoroChart() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 3)}
                 />
                 <ChartTooltip
                   cursor={false}
