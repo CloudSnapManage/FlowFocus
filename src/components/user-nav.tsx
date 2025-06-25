@@ -1,6 +1,7 @@
 "use client"
 
 import { useTheme } from "next-themes"
+import { useLayout } from "@/hooks/use-layout"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,10 +19,11 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Palette, User } from "lucide-react";
+import { LogOut, Palette, User, LayoutTemplate } from "lucide-react";
 
 export function UserNav() {
   const { theme, setTheme } = useTheme()
+  const { layout, setLayout } = useLayout()
 
   return (
     <DropdownMenu>
@@ -58,6 +60,20 @@ export function UserNav() {
                   <DropdownMenuRadioItem value="dark">Dark</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="rose">Rose</DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="system">System</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <LayoutTemplate className="mr-2 h-4 w-4" />
+              <span>Layout</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={layout} onValueChange={(value) => setLayout(value as 'default' | 'top-nav')}>
+                  <DropdownMenuRadioItem value="default">Default</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="top-nav">Top Nav</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
