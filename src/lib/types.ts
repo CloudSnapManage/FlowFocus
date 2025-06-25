@@ -1,4 +1,5 @@
 
+import type { StudyPlanInput } from "@/ai/flows/generate-study-plan";
 
 export type HabitType = 'binary' | 'quantitative';
 
@@ -68,4 +69,5 @@ export interface WeeklyPlan {
 export interface StudyPlan {
   goal: string;
   weeklyPlans: WeeklyPlan[];
+  userInput: StudyPlanInput; // The user input that generated this plan
 }
