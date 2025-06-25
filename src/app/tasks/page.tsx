@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Plus, Tag, CalendarIcon } from "lucide-react";
+import { Plus, Tag, CalendarIcon, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger, DialogClose } from "@/components/ui/dialog";
@@ -21,6 +21,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 
 const initialTasks: Task[] = [
@@ -51,6 +53,8 @@ export default function TasksPage() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [habits, setHabits] = useState<Habit[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
+    const [taskToDelete, setTaskToDelete] = useState<Task | null>(null);
 
     const form = useForm<z.infer<typeof taskFormSchema>>({
         resolver: zodResolver(taskFormSchema),
@@ -112,22 +116,67 @@ export default function TasksPage() {
             localStorage.setItem('flowfocus_habits', JSON.stringify(habits));
         }
     };
+    
+    const openDialogForTask = (task: Task | null) => {
+        setEditingTask(task);
+        if (task) {
+            form.reset({
+                name: task.name,
+                description: task.description || "",
+                category: task.category,
+                dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+                priority: task.priority,
+                habitId: task.habitId || "",
+            });
+        } else {
+            form.reset({
+                name: "",
+                description: "",
+                category: "",
+                priority: "medium",
+                habitId: "",
+                dueDate: undefined,
+            });
+        }
+        setIsDialogOpen(true);
+    };
+    
+    const handleDeleteTask = (taskId: string) => {
+        setTasks(tasks.filter(t => t.id !== taskId));
+        setTaskToDelete(null); // Close confirmation dialog
+    };
 
     function onSubmit(data: z.infer<typeof taskFormSchema>) {
         const newHabitId = data.habitId === 'none' || !data.habitId ? undefined : data.habitId;
-        const newTask: Task = {
-            id: `t${Date.now()}`,
-            name: data.name,
-            description: data.description,
-            category: data.category,
-            completed: false,
-            dueDate: data.dueDate ? data.dueDate.toISOString() : null,
-            priority: data.priority as 'low' | 'medium' | 'high',
-            habitId: newHabitId,
-        };
-        setTasks((currentTasks) => [...currentTasks, newTask]);
+        
+        if (editingTask) {
+            const updatedTask: Task = {
+                ...editingTask,
+                name: data.name,
+                description: data.description,
+                category: data.category,
+                dueDate: data.dueDate ? data.dueDate.toISOString() : null,
+                priority: data.priority as 'low' | 'medium' | 'high',
+                habitId: newHabitId,
+            };
+            setTasks(tasks.map(t => t.id === editingTask.id ? updatedTask : t));
+        } else {
+            const newTask: Task = {
+                id: `t${Date.now()}`,
+                name: data.name,
+                description: data.description,
+                category: data.category,
+                completed: false,
+                dueDate: data.dueDate ? data.dueDate.toISOString() : null,
+                priority: data.priority as 'low' | 'medium' | 'high',
+                habitId: newHabitId,
+            };
+            setTasks((currentTasks) => [...currentTasks, newTask]);
+        }
+
         form.reset();
         setIsDialogOpen(false);
+        setEditingTask(null);
     }
 
     const groupedTasks = useMemo(() => {
@@ -150,18 +199,24 @@ export default function TasksPage() {
                     <h1 className="text-3xl font-bold font-headline tracking-tight">Tasks</h1>
                     <p className="text-muted-foreground">Manage your daily routines and one-time to-dos.</p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                    setIsDialogOpen(open);
+                    if (!open) {
+                        form.reset();
+                        setEditingTask(null);
+                    }
+                }}>
                     <DialogTrigger asChild>
-                        <Button>
+                        <Button onClick={() => openDialogForTask(null)}>
                             <Plus className="mr-2 h-4 w-4" />
                             New Task
                         </Button>
                     </DialogTrigger>
                     <DialogContent className="sm:max-w-md">
                         <DialogHeader>
-                            <DialogTitle>Create New Task</DialogTitle>
+                            <DialogTitle>{editingTask ? 'Edit Task' : 'Create New Task'}</DialogTitle>
                             <DialogDescription>
-                                Add a new task to your list. Fill in the details below.
+                                {editingTask ? 'Make changes to your task.' : 'Add a new task to your list. Fill in the details below.'}
                             </DialogDescription>
                         </DialogHeader>
                         <Form {...form}>
@@ -271,7 +326,7 @@ export default function TasksPage() {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Link to Habit (Optional)</FormLabel>
-                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
                                                 <FormControl>
                                                     <SelectTrigger>
                                                         <SelectValue placeholder="Select a habit to link" />
@@ -334,6 +389,24 @@ export default function TasksPage() {
                                                 <Badge variant="outline" className={cn("capitalize border", priorityStyles[task.priority])}>
                                                     {task.priority}
                                                 </Badge>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                                                            <MoreVertical className="h-4 w-4" />
+                                                            <span className="sr-only">More options</span>
+                                                        </Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => openDialogForTask(task)}>
+                                                            <Pencil className="mr-2 h-4 w-4" />
+                                                            <span>Edit</span>
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => setTaskToDelete(task)} className="text-destructive focus:text-destructive">
+                                                            <Trash2 className="mr-2 h-4 w-4" />
+                                                            <span>Delete</span>
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
                                             </div>
                                         </CardContent>
                                     </Card>
@@ -343,6 +416,20 @@ export default function TasksPage() {
                     </AccordionItem>
                 ))}
             </Accordion>
+             <AlertDialog open={!!taskToDelete} onOpenChange={(open) => !open && setTaskToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the task: "{taskToDelete?.name}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setTaskToDelete(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDeleteTask(taskToDelete!.id)} className={cn(buttonVariants({ variant: "destructive" }))}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
