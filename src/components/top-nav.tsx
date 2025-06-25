@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/tooltip"
 import { BrainCircuit, Copy, LayoutDashboard, ListTodo, NotebookText, Repeat, Timer, BookMarked } from "lucide-react"
 import { Button } from "./ui/button"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -23,7 +25,7 @@ const navItems = [
   { href: "/study-plans", label: "Study Plans", icon: BookMarked },
 ]
 
-export function TopNav() {
+export function TopNav({ isExiting = false }: { isExiting?: boolean }) {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -40,8 +42,11 @@ export function TopNav() {
                 asChild
                 variant={isActive(item.href) ? "secondary" : "ghost"}
                 size="icon"
-                className="h-12 w-12 transform transition-transform duration-200 hover:scale-110 opacity-0 animate-drop-in"
-                style={{ animationDelay: `${index * 50}ms` }}
+                className={cn(
+                  "h-12 w-12 transform transition-transform duration-200 hover:scale-110 opacity-0",
+                  isExiting ? 'animate-lift-up-and-out' : 'animate-drop-in'
+                )}
+                style={{ animationDelay: isExiting ? `${(navItems.length - index -1) * 50}ms` : `${index * 50}ms` }}
               >
                 <Link href={item.href}>
                   <item.icon className="h-6 w-6" />

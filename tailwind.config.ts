@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -92,16 +93,26 @@ export default {
           '0%': { transform: 'translateX(-20px)', opacity: '0' },
           '100%': { transform: 'translateX(0)', opacity: '1' },
         },
+        'slide-out-to-left': {
+          '0%': { transform: 'translateX(0)', opacity: '1' },
+          '100%': { transform: 'translateX(-20px)', opacity: '0' },
+        },
         'drop-in': {
           '0%': { transform: 'translateY(-15px)', opacity: '0' },
           '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        'lift-up-and-out': {
+          '0%': { transform: 'translateY(0)', opacity: '1' },
+          '100%': { transform: 'translateY(-15px)', opacity: '0' },
         },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'slide-in-from-left': 'slide-in-from-left 0.3s ease-out forwards',
+        'slide-out-to-left': 'slide-out-to-left 0.3s ease-in forwards',
         'drop-in': 'drop-in 0.3s ease-out forwards',
+        'lift-up-and-out': 'lift-up-and-out 0.3s ease-in forwards',
       },
     },
   },
