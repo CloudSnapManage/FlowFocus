@@ -56,18 +56,17 @@ export interface StudyTask {
   id: string;
   topic: string;
   description: string;
-  duration: string;
+  duration: string; // e.g., "2 hours"
   completed: boolean;
-}
-
-export interface WeeklyPlan {
-  week: number;
-  theme: string;
-  tasks: StudyTask[];
+  date: string; // ISO date string, e.g., "2024-07-28"
+  resource?: string;
 }
 
 export interface StudyPlan {
-  goal: string;
-  weeklyPlans: WeeklyPlan[];
-  userInput: StudyPlanInput; // The user input that generated this plan
+  id: string;
+  title: string; // AI generated title or user-defined
+  goal: string; // User's original goal
+  tasks: StudyTask[];
+  userInput: StudyPlanInput;
+  startDate: string; // ISO date string
 }

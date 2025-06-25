@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI flow to generate a personalized study plan.
@@ -10,11 +11,13 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import type { StudyPlan } from '@/lib/types';
+import { addDays, format, parseISO } from 'date-fns';
 
 const StudyPlanInputSchema = z.object({
   subject: z.string().describe('The subject or topic the user wants to study.'),
   duration: z.string().describe('The total duration and frequency of study (e.g., "3 weeks, 4 days a week, 2 hours per day").'),
   details: z.string().optional().describe('Any additional details or preferences, such as learning style, pace, and interests (e.g., "I prefer hands-on projects and a medium pace. I am a complete beginner.").'),
+  startDate: z.string().describe('The start date of the plan in ISO format (e.g., "2024-07-28").'),
 });
 export type StudyPlanInput = z.infer<typeof StudyPlanInputSchema>;
 
@@ -23,34 +26,33 @@ const StudyTaskSchema = z.object({
   topic: z.string().describe('The specific topic for this study session.'),
   description: z.string().describe('A brief description of what to cover in the topic.'),
   duration: z.string().describe('Estimated time to complete the task (e.g., "2 hours", "90 minutes").'),
-  completed: z.boolean().default(false).describe('Whether the user has completed this task.'),
-});
-
-const WeeklyPlanSchema = z.object({
-  week: z.number().describe('The week number of the study plan.'),
-  theme: z.string().describe('The overarching theme or goal for the week.'),
-  tasks: z.array(StudyTaskSchema).describe('A list of study tasks for the week.'),
+  date: z.string().describe('The scheduled date for this task in YYYY-MM-DD format.'),
+  resource: z.string().optional().describe("An optional URL to a relevant resource (e.g., article or video)."),
 });
 
 const StudyPlanOutputSchema = z.object({
-  goal: z.string().describe('The main goal of the study plan, derived from the user input.'),
-  weeklyPlans: z.array(WeeklyPlanSchema).describe('An array of weekly plans, breaking down the subject.'),
+  title: z.string().describe('A concise, engaging title for the overall study plan.'),
+  tasks: z.array(StudyTaskSchema).describe('A flat list of all study tasks for the entire duration.'),
 });
 
 // The public-facing function that returns the full StudyPlan object
 export async function generateStudyPlan(input: StudyPlanInput): Promise<StudyPlan> {
   const planOutput = await generateStudyPlanFlow(input);
+
   // Add a completed field to each task, as the AI model might not include it.
-  planOutput.weeklyPlans.forEach(week => {
-      week.tasks.forEach(task => {
-          task.completed = false;
-      });
-  });
+  const tasksWithCompletion = planOutput.tasks.map(task => ({
+      ...task,
+      completed: false,
+  }));
   
   // Combine the AI output with the original user input to form the complete StudyPlan object
   return {
+    id: `plan_${Date.now()}`,
     ...planOutput,
+    tasks: tasksWithCompletion,
+    goal: input.subject,
     userInput: input,
+    startDate: input.startDate,
   };
 }
 
@@ -58,17 +60,21 @@ const prompt = ai.definePrompt({
   name: 'generateStudyPlanPrompt',
   input: { schema: StudyPlanInputSchema },
   output: { schema: StudyPlanOutputSchema },
-  prompt: `You are an expert curriculum designer and academic planner. Your task is to create a detailed, week-by-week study plan for a user based on their learning goal and preferences.
+  prompt: `You are an expert curriculum designer. Create a detailed, day-by-day study plan based on the user's goal.
 
 User Goal: {{{subject}}}
 Time Commitment: {{{duration}}}
+Start Date: {{{startDate}}}
 Preferences and Details: {{{details}}}
 
-Break down the subject into logical weekly themes. For each week, create a list of specific, actionable study tasks. Each task should have a clear topic, a brief description of what to cover, and an estimated duration (e.g., "2 hours", "90 minutes"). Ensure the plan is realistic for the given time commitment and tailored to the user's preferences (e.g., pace, learning style).
+Your task is to generate a comprehensive study plan as a flat list of tasks.
+- Create a concise, engaging title for the entire study plan.
+- Break down the subject into specific, actionable study tasks for each study day.
+- For each task, provide a topic, a brief description, an estimated duration, and an optional resource link.
+- Crucially, you must assign a specific date to each task in 'YYYY-MM-DD' format, starting from the user's provided start date and respecting their weekly study frequency.
+- Generate a unique ID for each task, like 't1', 't2', etc.
 
-Generate a unique ID for each task, following the format 'w[week_number]d[day_number]t[task_number_within_day]', for example: 'w1d1t1'.
-
-Structure your response strictly in the JSON format defined by the output schema.
+Structure your response strictly in the JSON format defined by the output schema. Do not group tasks by week.
 `,
 });
 
