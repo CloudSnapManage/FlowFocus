@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BrainCircuit, Copy, LayoutDashboard, ListTodo, NotebookText, Repeat, Timer, BookMarked, Settings } from "lucide-react"
+import { BrainCircuit, Copy, LayoutDashboard, ListTodo, NotebookText, Repeat, Timer, BookMarked } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
@@ -17,7 +17,6 @@ const navItems = [
   { href: "/notes", label: "Notes", icon: NotebookText },
   { href: "/study-plan", label: "AI Study Planner", icon: BrainCircuit },
   { href: "/study-plans", label: "Study Plans", icon: BookMarked },
-  { href: "/settings", label: "Settings", icon: Settings },
 ]
 
 export function MainNav() {
