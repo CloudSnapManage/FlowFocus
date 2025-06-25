@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Plus, Search, Tag, Pin, PinOff } from 'lucide-react';
+import { Plus, Search, Tag, Pin, PinOff, FileUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ interface NoteListProps {
   activeNoteId: string | null;
   onSelectNote: (id: string) => void;
   onCreateNote: () => void;
+  onTriggerImport: () => void;
   onTogglePin: (id: string) => void;
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -28,6 +29,7 @@ export function NoteList({
   activeNoteId,
   onSelectNote,
   onCreateNote,
+  onTriggerImport,
   onTogglePin,
   searchTerm,
   onSearchChange,
@@ -41,9 +43,14 @@ export function NoteList({
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold font-headline">My Notes</h2>
-          <Button size="icon" variant="ghost" onClick={onCreateNote} aria-label="New note">
-            <Plus className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center">
+            <Button size="icon" variant="ghost" onClick={onTriggerImport} aria-label="Import note">
+              <FileUp className="h-4 w-4" />
+            </Button>
+            <Button size="icon" variant="ghost" onClick={onCreateNote} aria-label="New note">
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

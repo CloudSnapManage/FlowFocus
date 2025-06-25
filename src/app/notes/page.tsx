@@ -15,6 +15,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn, exportNoteAsMarkdown } from "@/lib/utils";
 import type { Note } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 
 export default function NotesPage() {
@@ -35,11 +36,14 @@ export default function NotesPage() {
     manualSave,
     selectNextNote,
     selectPrevNote,
+    importNote,
   } = useNotes();
   
   const isMobile = useIsMobile();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
+  const { toast } = useToast();
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -75,6 +79,39 @@ export default function NotesPage() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [createNote, manualSave, selectPrevNote, selectNextNote]);
+  
+  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowedMimeTypes = ['text/markdown', 'text/plain'];
+    const allowedExtensions = ['.md', '.txt'];
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+
+    if (!allowedMimeTypes.includes(file.type) && !allowedExtensions.includes(fileExtension)) {
+      toast({
+        title: 'Invalid File Type',
+        description: 'Please select a Markdown (.md) or Text (.txt) file.',
+        variant: 'destructive',
+      });
+      if(event.target) event.target.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      importNote(file.name, content);
+      toast({
+        title: 'Note Imported',
+        description: `"${file.name}" has been successfully imported.`,
+      });
+    };
+    reader.readAsText(file);
+
+    if (event.target) event.target.value = '';
+  };
+
 
   const handleDeleteRequest = (id: string) => {
     const note = filteredNotes.find(n => n.id === id);
@@ -131,6 +168,7 @@ export default function NotesPage() {
         activeNoteId={activeNoteId}
         onSelectNote={handleSelectNote}
         onCreateNote={createNote}
+        onTriggerImport={() => fileInputRef.current?.click()}
         onTogglePin={togglePin}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -151,6 +189,14 @@ export default function NotesPage() {
             {editorComponent}
         </main>
       )}
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileImport}
+        className="hidden"
+        accept=".md,.txt,text/markdown,text/plain"
+      />
 
       <AlertDialog open={!!noteToDelete} onOpenChange={(open) => !open && setNoteToDelete(null)}>
         <AlertDialogContent>

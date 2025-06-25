@@ -113,6 +113,22 @@ export function useNotes() {
     setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
   }, []);
 
+  const handleImportNote = useCallback((title: string, body: string) => {
+    const newNote: Note = {
+      id: `n${Date.now()}`,
+      title: title.replace(/\.(md|txt)$/i, ''), // Remove file extension
+      body: body,
+      tags: ['imported'],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isPinned: false,
+    };
+    setNotes(prevNotes => [newNote, ...prevNotes]);
+    setActiveNoteId(newNote.id);
+    setSelectedTag(null); // Deselect any tags to show the new note
+    setSearchTerm(''); // Clear search to ensure the new note is visible
+  }, []);
+
   const filteredNotes = useMemo(() => {
     const filtered = notes
       .filter(note => {
@@ -165,6 +181,7 @@ export function useNotes() {
     updateNote: handleUpdateNote,
     deleteNote: handleDeleteNote,
     togglePin: handleTogglePin,
+    importNote: handleImportNote,
     manualSave,
     selectNextNote,
     selectPrevNote,
