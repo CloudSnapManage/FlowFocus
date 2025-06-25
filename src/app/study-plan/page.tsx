@@ -100,7 +100,7 @@ const StudyPlanForm = ({ form, onSubmit, isLoading }: { form: any, onSubmit: (da
             <FormField control={form.control} name="studyType" render={({ field }) => (
               <FormItem>
                 <div className="mb-4"><FormLabel className="text-base">Preferred Study Methods</FormLabel><FormDescription>Select how you like to learn.</FormDescription></div>
-                <div className="flex flex-wrap gap-4">{studyTypes.map((item) => (<FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || []).filter((value) => value !== item.id));}} /></FormControl><FormLabel className="font-normal">{item.label}</FormLabel></FormItem>))}</div>
+                <div className="flex flex-wrap gap-4">{studyTypes.map((item) => (<FormItem key={item.id} className="flex flex-row items-start space-x-3 space-y-0"><FormControl><Checkbox checked={field.value?.includes(item.id)} onCheckedChange={(checked) => {return checked ? field.onChange([...(field.value || []), item.id]) : field.onChange((field.value || []).filter((value: string) => value !== item.id));}} /></FormControl><FormLabel className="font-normal">{item.label}</FormLabel></FormItem>))}</div>
                 <FormMessage />
               </FormItem>
             )} />
