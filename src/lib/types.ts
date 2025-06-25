@@ -19,6 +19,7 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export interface Task {
   id: string;
   name: string;
+  description?: string;
   category: string;
   completed: boolean;
   dueDate: string | null;
