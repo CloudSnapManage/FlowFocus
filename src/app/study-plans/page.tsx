@@ -258,22 +258,22 @@ export default function StudyPlansPage() {
                         const progress = plan.tasks.length > 0 ? (plan.tasks.filter(t => t.completed).length / plan.tasks.length) * 100 : 0;
                         return (
                             <AccordionItem value={plan.id} key={plan.id} className="border rounded-lg">
-                                <AccordionTrigger className="p-4 hover:no-underline">
-                                    <div className="flex flex-col items-start text-left w-full">
-                                        <div className='flex justify-between w-full items-center'>
+                                <div className="flex items-start w-full">
+                                    <AccordionTrigger className="flex-1 p-4 text-left hover:no-underline">
+                                        <div className="flex flex-col items-start text-left w-full">
                                             <h3 className="text-xl font-headline font-semibold">{plan.title}</h3>
-                                            <div className='flex gap-2 mr-4'>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.preventDefault(); handleEdit(plan); }}><Pencil className="h-4 w-4"/></Button>
-                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.preventDefault(); deletePlan(plan.id); }}><Trash2 className="h-4 w-4"/></Button>
+                                            <p className="text-sm text-muted-foreground font-normal">{plan.goal}</p>
+                                            <div className='w-full mt-2 pr-6'>
+                                                <Progress value={progress} className="h-2"/>
+                                                <p className='text-xs text-muted-foreground mt-1'>{Math.round(progress)}% complete</p>
                                             </div>
                                         </div>
-                                        <p className="text-sm text-muted-foreground font-normal">{plan.goal}</p>
-                                        <div className='w-full mt-2 pr-10'>
-                                            <Progress value={progress} className="h-2"/>
-                                            <p className='text-xs text-muted-foreground mt-1'>{Math.round(progress)}% complete</p>
-                                        </div>
+                                    </AccordionTrigger>
+                                    <div className="flex gap-2 self-center pr-4">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(plan)}><Pencil className="h-4 w-4"/></Button>
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deletePlan(plan.id)}><Trash2 className="h-4 w-4"/></Button>
                                     </div>
-                                </AccordionTrigger>
+                                </div>
                                 <AccordionContent className="p-4 pt-0 space-y-2">
                                     {plan.tasks.sort((a,b) => parseISO(a.date).getTime() - parseISO(b.date).getTime()).map(task => (
                                         <Card key={task.id} className={cn("p-3 flex items-start gap-3", task.completed && 'bg-muted/50')}>
