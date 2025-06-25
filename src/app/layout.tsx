@@ -8,7 +8,6 @@ import { UserNav } from '@/components/user-nav';
 import { Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ThemeProvider } from '@/components/theme-provider';
-import { ThemeToggle } from '@/components/theme-toggle';
 
 export const metadata: Metadata = {
   title: 'FlowFocus',
@@ -51,9 +50,7 @@ export default function RootLayout({
                 <MainNav />
               </SidebarContent>
               <SidebarFooter>
-                <div className="p-2 flex justify-center group-data-[collapsible=icon]:justify-center">
-                    <ThemeToggle />
-                </div>
+                
               </SidebarFooter>
             </Sidebar>
             <SidebarInset>
