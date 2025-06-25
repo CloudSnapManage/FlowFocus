@@ -1,3 +1,4 @@
+
 "use client"
 
 import {
@@ -9,6 +10,7 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import React, { useEffect, useState } from "react";
 import { format, subDays } from "date-fns";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 
 const chartConfig = {
   sessions: {
@@ -21,7 +23,7 @@ export function PomodoroChart() {
     const [chartData, setChartData] = useState<{day: string; sessions: number}[]>([]);
 
     useEffect(() => {
-        const sessions = JSON.parse(localStorage.getItem('pomodoro_sessions') || '{}');
+        const sessions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.POMODORO_SESSIONS) || '{}');
         const data = [];
         for (let i = 6; i >= 0; i--) {
             const date = subDays(new Date(), i);

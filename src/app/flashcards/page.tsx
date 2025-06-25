@@ -1,10 +1,8 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Plus, MoreVertical, Pencil, Trash2, FolderOpen } from "lucide-react";
 import {
@@ -15,17 +13,8 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
   DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -43,9 +32,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import type { Deck } from "@/lib/types";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
+import { DeckFormDialog, type DeckFormData } from "@/components/deck-form-dialog";
 
 const initialDecks: Deck[] = [
   {
@@ -69,24 +59,14 @@ const initialDecks: Deck[] = [
   }
 ];
 
-const deckFormSchema = z.object({
-  name: z.string().min(2, "Deck name must be at least 2 characters."),
-  description: z.string().optional(),
-});
-
 export default function FlashcardsHomePage() {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deckToEdit, setDeckToEdit] = useState<Deck | null>(null);
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
 
-  const form = useForm<z.infer<typeof deckFormSchema>>({
-    resolver: zodResolver(deckFormSchema),
-    defaultValues: { name: "", description: "" },
-  });
-
   useEffect(() => {
-    const storedDecks = localStorage.getItem("flowfocus_decks");
+    const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
     if (storedDecks) {
       setDecks(JSON.parse(storedDecks));
     } else {
@@ -96,18 +76,17 @@ export default function FlashcardsHomePage() {
 
   useEffect(() => {
     // Only save if decks state is not the initial empty array, to avoid overwriting on first load
-    if (decks.length > 0 || localStorage.getItem("flowfocus_decks")) {
-      localStorage.setItem("flowfocus_decks", JSON.stringify(decks));
+    if (decks.length > 0 || localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS)) {
+      localStorage.setItem(LOCAL_STORAGE_KEYS.DECKS, JSON.stringify(decks));
     }
   }, [decks]);
 
-  const openFormDialog = (deck: Deck | null) => {
+  const openFormDialog = useCallback((deck: Deck | null) => {
     setDeckToEdit(deck);
-    form.reset(deck ? { name: deck.name, description: deck.description || "" } : { name: "", description: "" });
     setIsFormOpen(true);
-  };
+  }, []);
 
-  const onSubmit = (data: z.infer<typeof deckFormSchema>) => {
+  const handleSubmit = useCallback((data: DeckFormData) => {
     if (deckToEdit) {
       setDecks(decks.map(d => d.id === deckToEdit.id ? { ...d, ...data } : d));
     } else {
@@ -119,8 +98,7 @@ export default function FlashcardsHomePage() {
       };
       setDecks([...decks, newDeck]);
     }
-    setIsFormOpen(false);
-  };
+  }, [deckToEdit, decks]);
   
   const handleDeleteDeck = (deckId: string) => {
     setDecks(decks.filter(d => d.id !== deckId));
@@ -134,53 +112,11 @@ export default function FlashcardsHomePage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Flashcard Decks</h1>
           <p className="text-muted-foreground">Create and manage your study decks.</p>
         </div>
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-            <DialogTrigger asChild>
-                <Button onClick={() => openFormDialog(null)}>
-                    <Plus className="mr-2 h-4 w-4" /> New Deck
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{deckToEdit ? 'Edit Deck' : 'Create New Deck'}</DialogTitle>
-                    <DialogDescription>{deckToEdit ? 'Rename your deck or change its description.' : 'Give your new deck a name and an optional description.'}</DialogDescription>
-                </DialogHeader>
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                        <FormField
-                            control={form.control}
-                            name="name"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Deck Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g., React Hooks" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Description (Optional)</FormLabel>
-                                    <FormControl>
-                                        <Textarea placeholder="What's this deck about?" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <DialogFooter>
-                            <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                            <Button type="submit">Save Deck</Button>
-                        </DialogFooter>
-                    </form>
-                </Form>
-            </DialogContent>
-        </Dialog>
+        <DialogTrigger asChild>
+            <Button onClick={() => openFormDialog(null)}>
+                <Plus className="mr-2 h-4 w-4" /> New Deck
+            </Button>
+        </DialogTrigger>
       </div>
 
       {decks.length > 0 ? (
@@ -232,6 +168,13 @@ export default function FlashcardsHomePage() {
             </Button>
         </div>
       )}
+
+      <DeckFormDialog
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        onSubmit={handleSubmit}
+        deck={deckToEdit}
+      />
 
       <AlertDialog open={!!deckToDelete} onOpenChange={open => !open && setDeckToDelete(null)}>
         <AlertDialogContent>

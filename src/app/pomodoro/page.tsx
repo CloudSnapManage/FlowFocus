@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react";
@@ -18,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 
 type Mode = "pomodoro" | "shortBreak" | "longBreak";
 
@@ -32,7 +34,7 @@ export default function PomodoroPage() {
 
   useEffect(() => {
     // Load settings from local storage on mount
-    const savedSettings = localStorage.getItem("pomodoro_settings");
+    const savedSettings = localStorage.getItem(LOCAL_STORAGE_KEYS.POMODORO_SETTINGS);
     if (savedSettings) {
       const parsedSettings = JSON.parse(savedSettings);
       setSettings(parsedSettings);
@@ -74,9 +76,9 @@ export default function PomodoroPage() {
       // Track completed pomodoro sessions
       if (mode === 'pomodoro') {
         const today = format(new Date(), 'yyyy-MM-dd');
-        const sessions = JSON.parse(localStorage.getItem('pomodoro_sessions') || '{}');
+        const sessions = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.POMODORO_SESSIONS) || '{}');
         sessions[today] = (sessions[today] || 0) + 1;
-        localStorage.setItem('pomodoro_sessions', JSON.stringify(sessions));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.POMODORO_SESSIONS, JSON.stringify(sessions));
       }
       
       // Automatically switch to the next mode
@@ -105,7 +107,7 @@ export default function PomodoroPage() {
 
   const handleSaveSettings = () => {
     setSettings(tempSettings);
-    localStorage.setItem("pomodoro_settings", JSON.stringify(tempSettings));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.POMODORO_SETTINGS, JSON.stringify(tempSettings));
     setIsSettingsOpen(false);
 
     // Update timer if not active

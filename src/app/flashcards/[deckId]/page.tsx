@@ -1,34 +1,18 @@
 
 "use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus, RefreshCw, Shuffle, Pencil, Trash2, Home, List } from "lucide-react";
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import type { Deck, Flashcard } from '@/lib/types';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Textarea } from '@/components/ui/textarea';
+import { DialogTrigger } from "@/components/ui/dialog";
 import { Separator } from '@/components/ui/separator';
+import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
+import { CardFormDialog, type CardFormData } from '@/components/card-form-dialog';
 
-const cardFormSchema = z.object({
-  question: z.string().min(1, 'Question cannot be empty.'),
-  answer: z.string().min(1, 'Answer cannot be empty.'),
-});
 
 export default function DeckPage() {
   const params = useParams();
@@ -44,14 +28,9 @@ export default function DeckPage() {
   const [isCardFormOpen, setIsCardFormOpen] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<Flashcard | null>(null);
 
-  const form = useForm<z.infer<typeof cardFormSchema>>({
-    resolver: zodResolver(cardFormSchema),
-    defaultValues: { question: '', answer: '' },
-  });
-  
   useEffect(() => {
     setIsMounted(true);
-    const storedDecks = localStorage.getItem("flowfocus_decks");
+    const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
     if (storedDecks) {
       const decks: Deck[] = JSON.parse(storedDecks);
       const currentDeck = decks.find(d => d.id === deckId);
@@ -62,15 +41,15 @@ export default function DeckPage() {
     }
   }, [deckId]);
   
-  const updateDeckInStorage = (updatedDeck: Deck) => {
-    const storedDecks = localStorage.getItem("flowfocus_decks");
+  const updateDeckInStorage = useCallback((updatedDeck: Deck) => {
+    const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
     if (storedDecks) {
         let decks: Deck[] = JSON.parse(storedDecks);
         decks = decks.map(d => d.id === updatedDeck.id ? updatedDeck : d);
-        localStorage.setItem("flowfocus_decks", JSON.stringify(decks));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.DECKS, JSON.stringify(decks));
         setDeck(updatedDeck);
     }
-  }
+  }, []);
 
   const handleFlip = () => setIsFlipped(!isFlipped);
 
@@ -101,13 +80,12 @@ export default function DeckPage() {
     setIsFlipped(false);
   }
 
-  const openCardForm = (card: Flashcard | null) => {
+  const openCardForm = useCallback((card: Flashcard | null) => {
     setCardToEdit(card);
-    form.reset(card ? { question: card.question, answer: card.answer } : { question: '', answer: '' });
     setIsCardFormOpen(true);
-  };
+  }, []);
 
-  const handleCardSubmit = (data: z.infer<typeof cardFormSchema>) => {
+  const handleCardSubmit = useCallback((data: CardFormData) => {
     if (!deck) return;
     let updatedCards: Flashcard[];
     let newCardId = '';
@@ -129,11 +107,9 @@ export default function DeckPage() {
     if (newCardId) {
       setCardOrder(prev => [...prev, newCardId]);
     }
-    
-    setIsCardFormOpen(false);
-  };
+  }, [deck, cardToEdit, updateDeckInStorage]);
 
-  const handleDeleteCard = (cardId: string) => {
+  const handleDeleteCard = useCallback((cardId: string) => {
     if (!deck) return;
     const updatedCards = deck.cards.filter(c => c.id !== cardId);
     const updatedDeck = { ...deck, cards: updatedCards };
@@ -142,7 +118,7 @@ export default function DeckPage() {
     if (currentIndex >= updatedCards.length) {
       setCurrentIndex(Math.max(0, updatedCards.length - 1));
     }
-  }
+  }, [deck, currentIndex, updateDeckInStorage]);
 
   const currentCard = useMemo(() => {
     if (!deck || cardOrder.length === 0) return null;
@@ -179,52 +155,11 @@ export default function DeckPage() {
             <Button variant="outline" asChild>
                 <Link href="/flashcards"><Home className='mr-2 h-4 w-4'/> All Decks</Link>
             </Button>
-            <Dialog open={isCardFormOpen} onOpenChange={setIsCardFormOpen}>
-                <DialogTrigger asChild>
-                    <Button onClick={() => openCardForm(null)}>
-                        <Plus className="mr-2 h-4 w-4" /> Add Card
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>{cardToEdit ? 'Edit Card' : 'Add New Card'}</DialogTitle>
-                    </DialogHeader>
-                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleCardSubmit)} className="space-y-4">
-                            <FormField
-                                control={form.control}
-                                name="question"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Question (Front)</FormLabel>
-                                        <FormControl>
-                                            <Textarea placeholder="e.g., What is a React component?" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="answer"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Answer (Back)</FormLabel>
-                                        <FormControl>
-                                            <Textarea placeholder="e.g., A reusable piece of UI." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <DialogFooter>
-                                <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                                <Button type="submit">Save Card</Button>
-                            </DialogFooter>
-                        </form>
-                    </Form>
-                </DialogContent>
-            </Dialog>
+            <DialogTrigger asChild>
+                <Button onClick={() => openCardForm(null)}>
+                    <Plus className="mr-2 h-4 w-4" /> Add Card
+                </Button>
+            </DialogTrigger>
         </div>
       </div>
       
@@ -299,6 +234,13 @@ export default function DeckPage() {
           ))}
         </div>
       </div>
+      
+      <CardFormDialog 
+        isOpen={isCardFormOpen}
+        onOpenChange={setIsCardFormOpen}
+        onSubmit={handleCardSubmit}
+        card={cardToEdit}
+      />
     </div>
   );
 }

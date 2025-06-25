@@ -4,6 +4,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDebounceCallback } from 'usehooks-ts';
 import type { StudyPlan } from '@/lib/types';
+import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
 
 export function useStudyPlans() {
   const [plans, setPlans] = useState<StudyPlan[]>([]);
@@ -12,7 +13,7 @@ export function useStudyPlans() {
   // Load plans from localStorage
   useEffect(() => {
     try {
-      const storedPlans = localStorage.getItem('flowfocus_study_plans');
+      const storedPlans = localStorage.getItem(LOCAL_STORAGE_KEYS.STUDY_PLANS);
       if (storedPlans) {
         setPlans(JSON.parse(storedPlans));
       }
@@ -26,7 +27,7 @@ export function useStudyPlans() {
   // Save plans to localStorage with debounce
   const savePlansToStorage = useDebounceCallback((plansToSave: StudyPlan[]) => {
     try {
-        localStorage.setItem('flowfocus_study_plans', JSON.stringify(plansToSave));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.STUDY_PLANS, JSON.stringify(plansToSave));
     } catch (error) {
         console.error("Failed to save study plans to localStorage", error);
     }

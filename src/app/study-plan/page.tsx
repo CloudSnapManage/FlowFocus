@@ -23,6 +23,7 @@ import { useStudyPlans } from '@/hooks/use-study-plans';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
+import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
 
 const planFormSchema = z.object({
   subject: z.string().min(3, "Subject must be at least 3 characters long."),
@@ -210,13 +211,13 @@ export default function StudyPlanPage() {
   });
 
   useEffect(() => {
-    const savedPlan = localStorage.getItem('flowfocus_ai_study_plan');
+    const savedPlan = localStorage.getItem(LOCAL_STORAGE_KEYS.AI_STUDY_PLAN);
     if (savedPlan) {
       try {
         setStudyPlan(JSON.parse(savedPlan));
       } catch (e) {
         console.error("Failed to parse study plan from localStorage", e);
-        localStorage.removeItem('flowfocus_ai_study_plan');
+        localStorage.removeItem(LOCAL_STORAGE_KEYS.AI_STUDY_PLAN);
       }
     }
   }, []);
@@ -230,7 +231,7 @@ export default function StudyPlanPage() {
     try {
       const plan = await generateStudyPlan(aiInput);
       setStudyPlan(plan);
-      localStorage.setItem('flowfocus_ai_study_plan', JSON.stringify(plan));
+      localStorage.setItem(LOCAL_STORAGE_KEYS.AI_STUDY_PLAN, JSON.stringify(plan));
     } catch (e) {
       console.error(e);
       toast({ title: "Error Generating Plan", description: "There was a problem generating your study plan. Please check your connection and try again.", variant: "destructive" });
@@ -243,12 +244,12 @@ export default function StudyPlanPage() {
     if (!studyPlan) return;
     const newPlan = { ...studyPlan, tasks: studyPlan.tasks.map(task => task.id === taskId ? { ...task, completed } : task) };
     setStudyPlan(newPlan);
-    localStorage.setItem('flowfocus_ai_study_plan', JSON.stringify(newPlan));
+    localStorage.setItem(LOCAL_STORAGE_KEYS.AI_STUDY_PLAN, JSON.stringify(newPlan));
   };
 
   const handleResetPlan = () => {
     setStudyPlan(null);
-    localStorage.removeItem('flowfocus_ai_study_plan');
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.AI_STUDY_PLAN);
     form.reset();
   }
 

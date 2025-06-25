@@ -1,6 +1,8 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
 
 type Layout = 'default' | 'top-nav';
 
@@ -15,7 +17,7 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
   const [layout, setLayoutState] = useState<Layout>('default');
 
   useEffect(() => {
-    const storedLayout = localStorage.getItem('flowfocus_layout') as Layout;
+    const storedLayout = localStorage.getItem(LOCAL_STORAGE_KEYS.LAYOUT) as Layout;
     if (storedLayout && ['default', 'top-nav'].includes(storedLayout)) {
       setLayoutState(storedLayout);
     }
@@ -23,7 +25,7 @@ export function LayoutProvider({ children }: { children: React.ReactNode }) {
 
   const setLayout = (newLayout: Layout) => {
     setLayoutState(newLayout);
-    localStorage.setItem('flowfocus_layout', newLayout);
+    localStorage.setItem(LOCAL_STORAGE_KEYS.LAYOUT, newLayout);
   };
 
   const contextValue = useMemo(() => ({ layout, setLayout }), [layout]);

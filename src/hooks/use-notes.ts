@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDebounceCallback } from 'usehooks-ts';
 import type { Note } from '@/lib/types';
+import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
 
 const initialNotes: Note[] = [
   {
@@ -35,7 +36,7 @@ export function useNotes() {
   // Load notes from localStorage
   useEffect(() => {
     try {
-      const storedNotes = localStorage.getItem('flowfocus_notes');
+      const storedNotes = localStorage.getItem(LOCAL_STORAGE_KEYS.NOTES);
       if (storedNotes) {
         const parsedNotes: Note[] = JSON.parse(storedNotes);
         // Add isPinned property to old notes for compatibility
@@ -61,14 +62,14 @@ export function useNotes() {
   // Save notes to localStorage with debounce
   const saveNotesToStorage = useDebounceCallback((notesToSave: Note[]) => {
     try {
-        localStorage.setItem('flowfocus_notes', JSON.stringify(notesToSave));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.NOTES, JSON.stringify(notesToSave));
     } catch (error) {
         console.error("Failed to save notes to localStorage", error);
     }
   }, 500);
   
   useEffect(() => {
-    if (notes.length > 0 || localStorage.getItem('flowfocus_notes')) {
+    if (notes.length > 0 || localStorage.getItem(LOCAL_STORAGE_KEYS.NOTES)) {
         saveNotesToStorage(notes);
     }
   }, [notes, saveNotesToStorage]);

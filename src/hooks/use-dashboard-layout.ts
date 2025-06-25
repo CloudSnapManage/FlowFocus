@@ -2,9 +2,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import type { Layouts } from 'react-grid-layout';
-
-const LAYOUT_STORAGE_KEY = 'flowfocus_dashboard_layout';
+import type { Layouts, Layout } from 'react-grid-layout';
+import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
 
 export const defaultLayouts: Layouts = {
   lg: [
@@ -50,7 +49,7 @@ export function useDashboardLayout() {
 
   useEffect(() => {
     try {
-      const savedLayouts = localStorage.getItem(LAYOUT_STORAGE_KEY);
+      const savedLayouts = localStorage.getItem(LOCAL_STORAGE_KEYS.DASHBOARD_LAYOUT);
       // Ensure savedLayouts is a valid, non-empty, non-undefined string before parsing
       if (savedLayouts && savedLayouts !== 'undefined' && savedLayouts !== 'null') {
         const parsedLayouts = JSON.parse(savedLayouts);
@@ -69,12 +68,12 @@ export function useDashboardLayout() {
     }
   }, []);
 
-  const onLayoutChange = useCallback((layout: any, newLayouts: Layouts) => {
+  const onLayoutChange = useCallback((newLayout: Layout[], newLayouts: Layouts) => {
     // Only update state and localStorage if newLayouts is valid
     if (newLayouts) {
       setLayouts(newLayouts);
       try {
-        localStorage.setItem(LAYOUT_STORAGE_KEY, JSON.stringify(newLayouts));
+        localStorage.setItem(LOCAL_STORAGE_KEYS.DASHBOARD_LAYOUT, JSON.stringify(newLayouts));
       } catch (error) {
         console.error("Failed to save dashboard layout to localStorage", error);
       }
@@ -83,7 +82,7 @@ export function useDashboardLayout() {
 
   const resetLayouts = useCallback(() => {
     setLayouts(defaultLayouts);
-    localStorage.removeItem(LAYOUT_STORAGE_KEY);
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.DASHBOARD_LAYOUT);
   }, []);
 
   return {

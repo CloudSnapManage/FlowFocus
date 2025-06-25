@@ -10,14 +10,14 @@ import { BrainCircuit, Copy, NotebookText, Timer, ListTodo, ArrowRight, BookOpen
 import Link from "next/link";
 import { PomodoroChart } from "@/components/pomodoro-chart";
 import React, { useEffect, useState, useMemo } from "react";
-import type { Habit, Task, Note, StudyPlan, StudyTask } from "@/lib/types";
+import type { Habit, Task, Note, StudyPlan } from "@/lib/types";
 import { Progress } from "@/components/ui/progress";
-import { format, isToday, parseISO, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, isToday, parseISO } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Responsive, WidthProvider } from 'react-grid-layout';
-import type { Layout } from 'react-grid-layout';
 import { useDashboardLayout, defaultLayouts } from "@/hooks/use-dashboard-layout";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -57,16 +57,16 @@ export default function DashboardPage() {
     setIsMounted(true);
     const loadData = () => {
       try {
-        const storedHabits = localStorage.getItem('flowfocus_habits');
+        const storedHabits = localStorage.getItem(LOCAL_STORAGE_KEYS.HABITS);
         if (storedHabits) setHabits(JSON.parse(storedHabits));
         
-        const storedTasks = localStorage.getItem('flowfocus_tasks');
+        const storedTasks = localStorage.getItem(LOCAL_STORAGE_KEYS.TASKS);
         if (storedTasks) setTasks(JSON.parse(storedTasks));
         
-        const storedNotes = localStorage.getItem('flowfocus_notes');
+        const storedNotes = localStorage.getItem(LOCAL_STORAGE_KEYS.NOTES);
         if (storedNotes) setNotes(JSON.parse(storedNotes));
 
-        const storedStudyPlans = localStorage.getItem('flowfocus_study_plans');
+        const storedStudyPlans = localStorage.getItem(LOCAL_STORAGE_KEYS.STUDY_PLANS);
         if (storedStudyPlans) setStudyPlans(JSON.parse(storedStudyPlans));
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -102,7 +102,8 @@ export default function DashboardPage() {
   ].sort((a,b) => {
     const dateA = 'dueDate' in a ? a.dueDate : a.date;
     const dateB = 'dueDate' in b ? b.dueDate : b.date;
-    return new Date(dateA!).getTime() - new Date(dateB!).getTime()
+    if (!dateA || !dateB) return 0;
+    return new Date(dateA).getTime() - new Date(dateB).getTime()
   }), [tasks, studyPlans]);
 
   const dashboardItems = {
@@ -129,7 +130,7 @@ export default function DashboardPage() {
                       {'planTitle' in item ? (
                           <>From plan: <span className="font-semibold">{item.planTitle}</span></>
                       ) : (
-                          <>Category: <span className="font-semibold">{item.category}</span></>
+                          <>Category: <span className="font-semibold">{ 'category' in item ? item.category : 'Study' }</span></>
                       )}
                     </p>
                   </div>
@@ -279,7 +280,7 @@ export default function DashboardPage() {
       <ResponsiveGridLayout
         className={cn("layout", isCustomizing && "border-2 border-dashed rounded-lg p-2 bg-muted/20")}
         layouts={layouts}
-        onLayoutChange={(layout, allLayouts) => onLayoutChange(allLayouts)}
+        onLayoutChange={onLayoutChange}
         isDraggable={isCustomizing}
         isResizable={isCustomizing}
         draggableHandle=".draggable-handle"
