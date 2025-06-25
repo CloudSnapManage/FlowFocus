@@ -1,6 +1,9 @@
 
+"use client";
+
 import React from 'react';
 import dynamic from 'next/dynamic';
+import { useTheme } from 'next-themes';
 import { Trash2, Tag, X, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -17,6 +20,8 @@ interface NoteEditorProps {
 }
 
 export function NoteEditor({ note, onUpdate, onDelete, onExport }: NoteEditorProps) {
+  const { resolvedTheme } = useTheme();
+  
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center p-4 border-b gap-4">
@@ -61,7 +66,7 @@ export function NoteEditor({ note, onUpdate, onDelete, onExport }: NoteEditorPro
           }}
         />
       </div>
-      <div className="flex-1 overflow-auto" data-color-mode="light">
+      <div className="flex-1 overflow-auto" data-color-mode={resolvedTheme === 'dark' ? 'dark' : 'light'}>
         <MDEditor
           value={note.body}
           onChange={(value) => onUpdate(note.id, { body: value || '' })}
