@@ -59,10 +59,17 @@ export default function PomodoroPage() {
       setIsActive(false);
       
       // Play sound and show notification
-      audio?.play();
-      const notificationTitle = `${mode.charAt(0).toUpperCase() + mode.slice(1)} Finished!`;
-      const notificationBody = mode === "pomodoro" ? "Time for a break!" : "Time to get back to focus!";
-      new Notification(notificationTitle, { body: notificationBody });
+      if (audio) {
+        audio.play().catch(error => {
+          console.error("Could not play sound. Ensure notification.mp3 exists in /public/sounds.", error);
+        });
+      }
+
+      if (Notification.permission === "granted") {
+        const notificationTitle = `${mode.charAt(0).toUpperCase() + mode.slice(1)} Finished!`;
+        const notificationBody = mode === "pomodoro" ? "Time for a break!" : "Time to get back to focus!";
+        new Notification(notificationTitle, { body: notificationBody });
+      }
       
       // Track completed pomodoro sessions
       if (mode === 'pomodoro') {
