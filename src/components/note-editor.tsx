@@ -65,13 +65,14 @@ export function NoteEditor({ note, onUpdate, onDelete, onExport }: NoteEditorPro
           }}
         />
       </div>
-      <div className="flex-1 overflow-auto" data-color-mode={['dark', 'rose'].includes(resolvedTheme || '') ? 'dark' : 'light'}>
+      <div className="flex-1 overflow-auto">
         <MDEditor
           value={note.body}
           onChange={(value) => onUpdate(note.id, { body: value || '' })}
           className="h-full"
           preview="live"
           style={{ border: 'none', borderRadius: 0 }}
+          data-color-mode={['dark', 'rose'].includes(resolvedTheme || '') ? 'dark' : 'light'}
         />
       </div>
     </div>
