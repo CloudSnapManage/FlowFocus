@@ -40,9 +40,9 @@ const initialDecks: Deck[] = [
     name: "React Fundamentals",
     description: "Key concepts for mastering React.",
     cards: [
-      { id: "c1", question: "What is React?", answer: "A JavaScript library for building user interfaces." },
-      { id: "c2", question: "What is JSX?", answer: "A syntax extension for JavaScript, used with React to describe what the UI should look like." },
-      { id: "c3", question: "What is the virtual DOM?", answer: "A programming concept where a virtual representation of a UI is kept in memory and synced with the 'real' DOM." },
+      { id: "c1", question: "What is React?", answer: "A JavaScript library for building user interfaces.", createdAt: new Date().toISOString(), source: 'manual' },
+      { id: "c2", question: "What is JSX?", answer: "A syntax extension for JavaScript, used with React to describe what the UI should look like.", createdAt: new Date().toISOString(), source: 'manual' },
+      { id: "c3", question: "What is the virtual DOM?", answer: "A programming concept where a virtual representation of a UI is kept in memory and synced with the 'real' DOM.", createdAt: new Date().toISOString(), source: 'manual' },
     ],
   },
   {
@@ -50,8 +50,8 @@ const initialDecks: Deck[] = [
     name: "JavaScript Essentials",
     description: "Core JS concepts every developer should know.",
     cards: [
-        { id: "c4", question: "What are Promises?", answer: "An object representing the eventual completion or failure of an asynchronous operation." },
-        { id: "c5", question: "Difference between `let`, `const`, and `var`?", answer: "`var` is function-scoped, `let` and `const` are block-scoped. `const` cannot be reassigned." },
+        { id: "c4", question: "What are Promises?", answer: "An object representing the eventual completion or failure of an asynchronous operation.", createdAt: new Date().toISOString(), source: 'manual' },
+        { id: "c5", question: "Difference between `let`, `const`, and `var`?", answer: "`var` is function-scoped, `let` and `const` are block-scoped. `const` cannot be reassigned.", createdAt: new Date().toISOString(), source: 'manual' },
     ]
   }
 ];

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 import { TaskFormDialog, type TaskFormData } from "@/components/task-form-dialog";
 
@@ -181,7 +182,13 @@ export default function TasksPage() {
                                                 )}
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                {task.habitId && <Tag className="size-4 text-muted-foreground" title="Linked to a habit" />}
+                                                {task.habitId && (
+                                                    <TooltipProvider>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild><Tag className="size-4 text-muted-foreground" /></TooltipTrigger>
+                                                            <TooltipContent>Linked to a habit</TooltipContent>
+                                                        </Tooltip></TooltipProvider>
+                                                )}
                                                 <Badge variant="outline" className={cn("capitalize border", priorityStyles[task.priority])}>
                                                     {task.priority}
                                                 </Badge>

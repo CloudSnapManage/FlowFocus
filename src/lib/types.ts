@@ -33,6 +33,15 @@ export interface Flashcard {
   id: string;
   question: string;
   answer: string;
+  createdAt: string;
+  source: 'manual' | 'AI';
+  nextReview?: string;
+  stats?: {
+    easiness: number;
+    interval: number;
+    repetitions: number;
+    lastReviewed: string;
+  };
 }
 
 export interface Deck {

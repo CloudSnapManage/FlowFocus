@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
+import Link from 'next/link';
 import { Plus } from "lucide-react";
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
@@ -14,8 +15,11 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn, exportNoteAsMarkdown } from "@/lib/utils";
-import type { Note } from "@/lib/types";
+import type { Note, Deck } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { generateFlashcards } from "@/ai/flows/generate-flashcards";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
+import { ToastAction } from "@/components/ui/toast";
 
 
 export default function NotesPage() {
@@ -44,6 +48,7 @@ export default function NotesPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [noteToDelete, setNoteToDelete] = useState<Note | null>(null);
   const { toast } = useToast();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -143,6 +148,59 @@ export default function NotesPage() {
   const handleSelectNote = (id: string) => {
     setActiveNoteId(id);
   }
+  
+  const handleGenerateFlashcards = async (note: Note) => {
+    if (!note.body.trim()) {
+      toast({
+        title: 'Note is empty',
+        description: 'Cannot generate flashcards from an empty note.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const result = await generateFlashcards({ content: note.body });
+      
+      const newDeck: Deck = {
+        id: `d${Date.now()}`,
+        name: `Flashcards for "${note.title}"`,
+        description: `AI-generated from note.`,
+        cards: result.cards.map(card => ({
+          id: `c${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          question: card.question,
+          answer: card.answer,
+          createdAt: new Date().toISOString(),
+          source: 'AI',
+        })),
+      };
+
+      const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
+      const decks: Deck[] = storedDecks ? JSON.parse(storedDecks) : [];
+      localStorage.setItem(LOCAL_STORAGE_KEYS.DECKS, JSON.stringify([newDeck, ...decks]));
+
+      toast({
+        title: 'Flashcard Deck Created!',
+        description: `"${newDeck.name}" has been added.`,
+        action: (
+            <ToastAction asChild altText="View Deck">
+              <Link href={`/flashcards/${newDeck.id}`}>View Deck</Link>
+            </ToastAction>
+        ),
+      });
+
+    } catch (error) {
+      console.error("Failed to generate flashcards:", error);
+      toast({
+        title: 'Generation Failed',
+        description: 'There was an error generating flashcards. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const editorComponent = activeNote ? (
     <NoteEditor 
@@ -150,6 +208,8 @@ export default function NotesPage() {
       onUpdate={updateNote}
       onDelete={handleDeleteRequest}
       onExport={exportNoteAsMarkdown}
+      onGenerateFlashcards={handleGenerateFlashcards}
+      isGeneratingFlashcards={isGenerating}
     />
   ) : (
      <div className="flex flex-col items-center justify-center h-full text-center p-8">

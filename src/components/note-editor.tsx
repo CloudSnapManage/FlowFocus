@@ -1,13 +1,15 @@
+
 "use client";
 
 import React from 'react';
 import dynamic from 'next/dynamic';
 import { useTheme } from 'next-themes';
-import { Trash2, Tag, X, Download } from 'lucide-react';
+import { Lightbulb, Loader2, Trash2, Tag, X, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Note } from '@/lib/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 
@@ -16,20 +18,38 @@ interface NoteEditorProps {
   onUpdate: (id: string, updates: Partial<Omit<Note, 'id' | 'createdAt'>>) => void;
   onDelete: (id: string) => void;
   onExport: (note: Note) => void;
+  onGenerateFlashcards: (note: Note) => void;
+  isGeneratingFlashcards: boolean;
 }
 
-export function NoteEditor({ note, onUpdate, onDelete, onExport }: NoteEditorProps) {
+export function NoteEditor({ note, onUpdate, onDelete, onExport, onGenerateFlashcards, isGeneratingFlashcards }: NoteEditorProps) {
   const { resolvedTheme } = useTheme();
   
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center p-4 border-b gap-4">
+      <div className="flex items-center p-4 border-b gap-2">
         <Input
           value={note.title}
           onChange={(e) => onUpdate(note.id, { title: e.target.value })}
           className="text-2xl font-bold font-headline h-auto border-none shadow-none focus-visible:ring-0 p-0"
           aria-label="Note title"
         />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              {/* Disabled buttons need a span wrapper for Tooltip to work */}
+              <span>
+                <Button variant="ghost" size="icon" className="shrink-0" onClick={() => onGenerateFlashcards(note)} disabled={isGeneratingFlashcards}>
+                  {isGeneratingFlashcards ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lightbulb className="h-4 w-4" />}
+                </Button>
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Generate Flashcards from Note</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         <Button variant="ghost" size="icon" className="shrink-0" onClick={() => onExport(note)}>
           <Download className="h-4 w-4" />
         </Button>

@@ -96,6 +96,8 @@ export default function DeckPage() {
         id: newCardId,
         question: data.question,
         answer: data.answer,
+        createdAt: new Date().toISOString(),
+        source: 'manual',
       };
       updatedCards = [...deck.cards, newCard];
     }
