@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -62,6 +63,7 @@ const initialDecks: Deck[] = [
 
 export default function FlashcardsHomePage() {
   const [decks, setDecks] = useState<Deck[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deckToEdit, setDeckToEdit] = useState<Deck | null>(null);
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
@@ -69,20 +71,26 @@ export default function FlashcardsHomePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
-    if (storedDecks) {
-      setDecks(JSON.parse(storedDecks));
-    } else {
-      setDecks(initialDecks);
+    try {
+      const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
+      if (storedDecks) {
+        setDecks(JSON.parse(storedDecks));
+      } else {
+        setDecks(initialDecks);
+      }
+    } catch (error) {
+        console.error("Failed to load decks from localStorage", error);
+        setDecks(initialDecks);
+    } finally {
+        setIsLoaded(true);
     }
   }, []);
 
   useEffect(() => {
-    // Only save if decks state is not the initial empty array, to avoid overwriting on first load
-    if (decks.length > 0 || localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS)) {
+    if (isLoaded) {
       localStorage.setItem(LOCAL_STORAGE_KEYS.DECKS, JSON.stringify(decks));
     }
-  }, [decks]);
+  }, [decks, isLoaded]);
 
   const openFormDialog = useCallback((deck: Deck | null) => {
     setDeckToEdit(deck);
