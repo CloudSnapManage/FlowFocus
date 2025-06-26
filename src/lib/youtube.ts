@@ -1,4 +1,3 @@
-
 'use server';
 
 import { YoutubeTranscript } from 'youtube-transcript';
@@ -11,34 +10,27 @@ import { YoutubeTranscript } from 'youtube-transcript';
  */
 export async function getYouTubeTranscript(url: string): Promise<string> {
   try {
-    // Explicitly request the English ('en') transcript and specify a country ('US').
-    // This makes the request more robust and helps ensure that we get a transcript 
-    // even if it's auto-generated, avoiding issues with server-side locale detection.
+    // Attempt to fetch the transcript, explicitly asking for English.
     const transcript = await YoutubeTranscript.fetchTranscript(url, {
       lang: 'en',
       country: 'US',
     });
     
+    // If the library returns an empty array, it means no content was found.
     if (!transcript || transcript.length === 0) {
       throw new Error("No transcript content found for this video.");
     }
     
+    // Join the text segments into a single string.
     return transcript.map(item => item.text).join(' ');
   } catch (error) {
+    // Log the actual technical error for debugging purposes.
     console.error("Failed to fetch YouTube transcript:", error);
 
-    if (error instanceof Error) {
-      // This handles cases where subtitles are explicitly disabled.
-      if (error.message.includes('subtitles are disabled')) {
-         throw new Error("Could not retrieve transcript because subtitles are disabled for this video.");
-      }
-      // This handles cases where the library can't find a transcript at all or it's empty.
-      if (error.message.includes('Could not find a transcript') || error.message.includes('No transcript content found')) {
-          throw new Error("No English transcript could be found for this video. The creator may have disabled them.");
-      }
-    }
-    
-    // A more informative fallback error for other network or unexpected issues.
-    throw new Error("Failed to process the YouTube URL. The video might be private, unavailable, or have been deleted.");
+    // Provide a single, more helpful error message to the user that covers the most likely scenarios.
+    // This is more reliable than trying to parse specific error messages from the library, which can be inconsistent.
+    throw new Error(
+        "Could not fetch transcript. The video may be private, have captions disabled, or a transcript in English may not be available."
+    );
   }
 }
