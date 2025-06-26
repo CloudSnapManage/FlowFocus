@@ -1,7 +1,7 @@
 
 'use server';
 
-import { YouTubeTranscript } from 'youtube-transcript';
+import { YoutubeTranscript } from 'youtube-transcript';
 
 /**
  * Fetches the transcript for a given YouTube video URL.
@@ -11,7 +11,7 @@ import { YouTubeTranscript } from 'youtube-transcript';
  */
 export async function getYouTubeTranscript(url: string): Promise<string> {
   try {
-    const transcript = await YouTubeTranscript.fetchTranscript(url);
+    const transcript = await YoutubeTranscript.fetchTranscript(url);
     
     if (!transcript || transcript.length === 0) {
       throw new Error("No transcript found for this video.");
