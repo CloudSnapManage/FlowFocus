@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { BrainCircuit, Copy, LayoutDashboard, ListTodo, NotebookText, Repeat, Timer, BookMarked } from "lucide-react"
+import { BrainCircuit, Copy, LayoutDashboard, ListTodo, NotebookText, Repeat, Timer, BookMarked, FileVideo } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
@@ -15,6 +15,7 @@ const navItems = [
   { href: "/habits", label: "Habit Tracker", icon: Repeat },
   { href: "/flashcards", label: "Flashcards", icon: Copy },
   { href: "/notes", label: "Notes", icon: NotebookText },
+  { href: "/content-summarizer", label: "Summarizer", icon: FileVideo },
   { href: "/study-plan", label: "AI Study Planner", icon: BrainCircuit },
   { href: "/study-plans", label: "Study Plans", icon: BookMarked },
 ]
@@ -23,6 +24,7 @@ export function MainNav() {
   const pathname = usePathname()
 
   const isActive = (href: string) => {
+    if (href === "/content-summarizer") return pathname.startsWith(href);
     return href === "/" ? pathname === "/" : pathname.startsWith(href)
   }
 
