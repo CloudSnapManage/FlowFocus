@@ -150,7 +150,7 @@ export default function ContentSummarizerPage() {
                 <form onSubmit={urlForm.handleSubmit(handleUrlSubmit)}>
                     <CardHeader>
                     <CardTitle>YouTube Video URL</CardTitle>
-                    <CardDescription>Pasting a link may not always work due to network restrictions. If it fails, try the "From Text" option.</CardDescription>
+                    <CardDescription>This feature is currently in development. Pasting a link may not always work due to network restrictions. If it fails, please use the "From Text" option.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <FormField
