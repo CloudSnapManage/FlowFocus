@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Plus, RefreshCw, Shuffle, Pencil, Trash2, Home, List } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, RefreshCw, Shuffle, Pencil, Trash2, Home, List, Check } from "lucide-react";
 import type { Deck, Flashcard } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { LOCAL_STORAGE_KEYS } from '@/lib/constants';
@@ -26,6 +26,7 @@ export default function DeckPage() {
 
   const [isCardFormOpen, setIsCardFormOpen] = useState(false);
   const [cardToEdit, setCardToEdit] = useState<Flashcard | null>(null);
+  const [isEditingList, setIsEditingList] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -159,6 +160,9 @@ export default function DeckPage() {
             <Button onClick={() => openCardForm(null)}>
                 <Plus className="mr-2 h-4 w-4" /> Add Card
             </Button>
+            <Button variant="outline" onClick={() => setIsEditingList(prev => !prev)}>
+                {isEditingList ? <><Check className='mr-2 h-4 w-4'/> Done</> : <><Pencil className='mr-2 h-4 w-4'/> Manage Cards</>}
+            </Button>
         </div>
       </div>
       
@@ -208,31 +212,33 @@ export default function DeckPage() {
       
       <Separator />
 
-      <div>
-        <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2"><List /> Cards in this Deck ({deck.cards.length})</h2>
-        <div className="space-y-3">
-          {deck.cards.map((card) => (
-            <Card key={card.id} className='shadow-sm'>
-              <CardContent className='p-4 flex items-start justify-between gap-4'>
-                <div className='flex-grow grid grid-cols-1 md:grid-cols-2 gap-4'>
-                    <div>
-                        <p className='text-xs text-muted-foreground font-semibold'>QUESTION</p>
-                        <p className='font-sans'>{card.question}</p>
-                    </div>
-                     <div>
-                        <p className='text-xs text-muted-foreground font-semibold'>ANSWER</p>
-                        <p className='font-sans'>{card.answer}</p>
-                    </div>
-                </div>
-                <div className='flex gap-1'>
-                    <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => openCardForm(card)}><Pencil className='h-4 w-4' /></Button>
-                    <Button variant="ghost" size="icon" className='h-8 w-8 text-destructive hover:text-destructive' onClick={() => handleDeleteCard(card.id)}><Trash2 className='h-4 w-4' /></Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {isEditingList && (
+        <div className='mt-4'>
+          <h2 className="text-2xl font-bold font-headline mb-4 flex items-center gap-2"><List /> Cards in this Deck ({deck.cards.length})</h2>
+          <div className="space-y-3">
+            {deck.cards.map((card) => (
+              <Card key={card.id} className='shadow-sm'>
+                <CardContent className='p-4 flex items-start justify-between gap-4'>
+                  <div className='flex-grow grid grid-cols-1 md:grid-cols-2 gap-4'>
+                      <div>
+                          <p className='text-xs text-muted-foreground font-semibold'>QUESTION</p>
+                          <p className='font-sans'>{card.question}</p>
+                      </div>
+                       <div>
+                          <p className='text-xs text-muted-foreground font-semibold'>ANSWER</p>
+                          <p className='font-sans'>{card.answer}</p>
+                      </div>
+                  </div>
+                  <div className='flex gap-1'>
+                      <Button variant="ghost" size="icon" className='h-8 w-8' onClick={() => openCardForm(card)}><Pencil className='h-4 w-4' /></Button>
+                      <Button variant="ghost" size="icon" className='h-8 w-8 text-destructive hover:text-destructive' onClick={() => handleDeleteCard(card.id)}><Trash2 className='h-4 w-4' /></Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       
       <CardFormDialog 
         isOpen={isCardFormOpen}
