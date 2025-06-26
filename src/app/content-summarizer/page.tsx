@@ -6,8 +6,10 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 
 import { summarizeTranscript, type SummarizeTranscriptOutput } from "@/ai/flows/summarize-transcript";
+import { generateFlashcards, type GenerateFlashcardsOutput } from "@/ai/flows/generate-flashcards";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,12 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, FileVideo, AlertCircle, Download, Send, Type } from "lucide-react";
+import { Loader2, FileVideo, AlertCircle, Download, Send, Type, BrainCircuit, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useNotes } from "@/hooks/use-notes";
 import { exportNoteAsMarkdown } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { ToastAction } from "@/components/ui/toast";
+import type { Deck } from "@/lib/types";
+import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor').then(mod => mod.default.Markdown), {
   ssr: false,
@@ -47,9 +52,11 @@ const textFormSchema = z.object({
 type TextFormValues = z.infer<typeof textFormSchema>;
 
 export default function ContentSummarizerPage() {
-  const [isPending, startTransition] = useTransition();
+  const [isSummarizing, startSummarizing] = useTransition();
+  const [isGeneratingFlashcards, startFlashcardGeneration] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SummarizeTranscriptOutput | null>(null);
+  const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['cards'] | null>(null);
 
   const { toast } = useToast();
   const { importNote } = useNotes();
@@ -64,11 +71,15 @@ export default function ContentSummarizerPage() {
       defaultValues: { content: "", summaryStyle: summaryStyles[0].value },
   });
 
-  const handleUrlSubmit = (data: UrlFormValues) => {
+  const resetState = () => {
     setError(null);
     setResult(null);
+    setFlashcards(null);
+  }
 
-    startTransition(async () => {
+  const handleUrlSubmit = (data: UrlFormValues) => {
+    resetState();
+    startSummarizing(async () => {
       try {
         const response = await fetch('/api/transcript', {
           method: 'POST',
@@ -94,10 +105,8 @@ export default function ContentSummarizerPage() {
   };
 
   const handleTextSubmit = (data: TextFormValues) => {
-    setError(null);
-    setResult(null);
-
-    startTransition(async () => {
+    resetState();
+    startSummarizing(async () => {
         try {
             const summaryResult = await summarizeTranscript({ 
                 transcript: data.content,
@@ -110,6 +119,18 @@ export default function ContentSummarizerPage() {
     });
   };
   
+  const handleGenerateFlashcards = () => {
+    if (!result) return;
+    startFlashcardGeneration(async () => {
+        try {
+            const flashcardResult = await generateFlashcards({ content: result.summary });
+            setFlashcards(flashcardResult.cards);
+        } catch (e: any) {
+            setError("Failed to generate flashcards. Please try again.");
+        }
+    });
+  }
+
   const handleSaveToNotes = () => {
     if (!result) return;
     importNote(result.title, result.summary);
@@ -122,7 +143,7 @@ export default function ContentSummarizerPage() {
   const handleDownload = () => {
       if(!result) return;
       exportNoteAsMarkdown({
-          id: '', // Not needed for export
+          id: '',
           title: result.title,
           body: result.summary,
           tags: ['summarized', 'youtube'],
@@ -131,6 +152,42 @@ export default function ContentSummarizerPage() {
           isPinned: false
       });
   }
+
+  const handleSaveToDecks = () => {
+    if (!result || !flashcards) return;
+    const newDeck: Deck = {
+      id: `d${Date.now()}`,
+      name: `Flashcards for "${result.title}"`,
+      description: `AI-generated from a video summary.`,
+      cards: flashcards.map(card => ({
+        id: `c${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+        question: card.question,
+        answer: card.answer,
+        createdAt: new Date().toISOString(),
+        source: 'AI',
+      })),
+    };
+
+    try {
+        const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
+        const decks: Deck[] = storedDecks ? JSON.parse(storedDecks) : [];
+        localStorage.setItem(LOCAL_STORAGE_KEYS.DECKS, JSON.stringify([newDeck, ...decks]));
+
+        toast({
+            title: 'Flashcard Deck Saved!',
+            description: `"${newDeck.name}" has been added to your decks.`,
+            action: (
+                <ToastAction asChild altText="View Deck">
+                    <Link href={`/flashcards/${newDeck.id}`}>View Deck</Link>
+                </ToastAction>
+            ),
+        });
+        setFlashcards(null); // Clear the generated cards after saving
+    } catch (e) {
+        setError("Failed to save the deck to your local storage.");
+    }
+  }
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -190,9 +247,9 @@ export default function ContentSummarizerPage() {
                         />
                     </CardContent>
                     <CardFooter>
-                         <Button type="submit" disabled={isPending} className="w-full">
-                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileVideo className="mr-2 h-4 w-4" />}
-                            {isPending ? "Summarizing..." : "Summarize Video"}
+                         <Button type="submit" disabled={isSummarizing} className="w-full">
+                            {isSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileVideo className="mr-2 h-4 w-4" />}
+                            {isSummarizing ? "Summarizing..." : "Summarize Video"}
                         </Button>
                     </CardFooter>
                 </form>
@@ -245,9 +302,9 @@ export default function ContentSummarizerPage() {
                         />
                     </CardContent>
                     <CardFooter>
-                        <Button type="submit" disabled={isPending} className="w-full">
-                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Type className="mr-2 h-4 w-4" />}
-                            {isPending ? "Summarizing..." : "Summarize Text"}
+                        <Button type="submit" disabled={isSummarizing} className="w-full">
+                            {isSummarizing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Type className="mr-2 h-4 w-4" />}
+                            {isSummarizing ? "Summarizing..." : "Summarize Text"}
                         </Button>
                     </CardFooter>
                 </form>
@@ -281,6 +338,47 @@ export default function ContentSummarizerPage() {
             </CardFooter>
         </Card>
       )}
+
+      {result && (
+        <Card>
+            <CardHeader>
+                <CardTitle>Generate Flashcards</CardTitle>
+                <CardDescription>Create a study deck from the summary above.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                {isGeneratingFlashcards && (
+                     <div className="flex items-center justify-center p-8">
+                        <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+                        <p>Generating flashcards...</p>
+                    </div>
+                )}
+
+                {!flashcards && !isGeneratingFlashcards && (
+                    <Button onClick={handleGenerateFlashcards} className="w-full">
+                        <BrainCircuit className="mr-2 h-4 w-4" /> Generate Flashcards from Summary
+                    </Button>
+                )}
+
+                {flashcards && (
+                    <div className="space-y-4">
+                        {flashcards.map((card, index) => (
+                            <div key={index} className="p-4 border rounded-md">
+                                <p className="font-semibold text-sm">Q: {card.question}</p>
+                                <p className="text-sm text-muted-foreground mt-1">A: {card.answer}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </CardContent>
+            {flashcards && (
+                <CardFooter>
+                    <Button onClick={handleSaveToDecks}><Copy className="mr-2 h-4 w-4" /> Save to Decks</Button>
+                </CardFooter>
+            )}
+        </Card>
+      )}
     </div>
   );
 }
+
+    
