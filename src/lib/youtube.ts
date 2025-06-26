@@ -1,4 +1,3 @@
-
 'use server';
 
 import { YoutubeTranscript } from 'youtube-transcript';
@@ -14,17 +13,25 @@ export async function getYouTubeTranscript(url: string): Promise<string> {
     const transcript = await YoutubeTranscript.fetchTranscript(url);
     
     if (!transcript || transcript.length === 0) {
-      throw new Error("No transcript found for this video.");
+      throw new Error("No transcript content found for this video.");
     }
     
     return transcript.map(item => item.text).join(' ');
   } catch (error) {
     console.error("Failed to fetch YouTube transcript:", error);
 
-    if (error instanceof Error && error.message.includes('subtitles are disabled')) {
-         throw new Error("Could not retrieve transcript. Subtitles may be disabled for this video.");
+    if (error instanceof Error) {
+      // This handles cases where subtitles are explicitly disabled.
+      if (error.message.includes('subtitles are disabled')) {
+         throw new Error("Could not retrieve transcript because subtitles are disabled for this video.");
+      }
+      // This handles cases where the library can't find a transcript at all or it's empty.
+      if (error.message.includes('Could not find a transcript') || error.message.includes('No transcript content found')) {
+          throw new Error("No transcript could be found for this video. The creator may have disabled them, or they may not be available in English.");
+      }
     }
     
-    throw new Error("Failed to process YouTube URL. Please ensure it's a valid video link.");
+    // A more informative fallback error for other network or unexpected issues.
+    throw new Error("Failed to process the YouTube URL. The video might be private, unavailable in your region, or have been deleted.");
   }
 }
