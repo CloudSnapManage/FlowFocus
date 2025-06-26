@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import dynamic from 'next/dynamic';
 
-import { getYouTubeTranscript } from "@/lib/youtube";
 import { summarizeTranscript, type SummarizeTranscriptOutput } from "@/ai/flows/summarize-transcript";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -38,7 +37,7 @@ export default function ContentSummarizerPage() {
   const [result, setResult] = useState<SummarizeTranscriptOutput | null>(null);
 
   const { toast } = useToast();
-  const { createNote, importNote } = useNotes();
+  const { importNote } = useNotes();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -51,8 +50,21 @@ export default function ContentSummarizerPage() {
 
     startTransition(async () => {
       try {
-        const transcript = await getYouTubeTranscript(data.url);
-        const summaryResult = await summarizeTranscript({ transcript });
+        const response = await fetch('/api/transcript', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: data.url }),
+        });
+
+        const resultData = await response.json();
+
+        if (!response.ok) {
+          throw new Error(resultData.error || 'An unexpected error occurred fetching the transcript.');
+        }
+        
+        const summaryResult = await summarizeTranscript({ transcript: resultData.transcript });
         setResult(summaryResult);
       } catch (e: any) {
         setError(e.message || "An unexpected error occurred.");
