@@ -13,6 +13,7 @@ import { z } from 'zod';
 
 const GenerateFlashcardsInputSchema = z.object({
   content: z.string().describe('The text content to be converted into flashcards.'),
+  cardCount: z.number().min(1).max(50).optional().default(10).describe('The number of flashcards to generate.'),
 });
 export type GenerateFlashcardsInput = z.infer<typeof GenerateFlashcardsInputSchema>;
 
@@ -22,7 +23,7 @@ const FlashcardSchema = z.object({
 });
 
 const GenerateFlashcardsOutputSchema = z.object({
-  cards: z.array(FlashcardSchema).describe('An array of 5 to 10 generated flashcards.'),
+  cards: z.array(FlashcardSchema).describe('An array of generated flashcards.'),
 });
 export type GenerateFlashcardsOutput = z.infer<typeof GenerateFlashcardsOutputSchema>;
 
@@ -36,7 +37,7 @@ const prompt = ai.definePrompt({
   output: { schema: GenerateFlashcardsOutputSchema },
   prompt: `You are an AI assistant that excels at creating study materials.
   
-Based on the following text, generate a set of 5 to 10 flashcards in a simple Question/Answer format.
+Based on the following text, generate exactly {{{cardCount}}} flashcards in a simple Question/Answer format.
 Focus on the most important concepts, definitions, and key takeaways from the text.
 Ensure questions are clear and answers are concise.
 

@@ -118,7 +118,7 @@ export default function FlashcardsHomePage() {
   
   const handleGenerateFromText = async (data: GeneratorFormData) => {
     try {
-      const result = await generateFlashcards({ content: data.content });
+      const result = await generateFlashcards({ content: data.content, cardCount: data.cardCount });
       
       const newDeck: Deck = {
         id: `d${Date.now()}`,

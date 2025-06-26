@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -5,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, BrainCircuit } from 'lucide-react';
@@ -14,6 +15,7 @@ import { Input } from '@/components/ui/input';
 const generatorFormSchema = z.object({
   content: z.string().min(50, 'Please provide at least 50 characters of content to generate flashcards.'),
   deckName: z.string().min(3, 'Deck name must be at least 3 characters long.'),
+  cardCount: z.coerce.number().min(1, 'Please generate at least 1 card.').max(50, 'You can generate a maximum of 50 cards.'),
 });
 
 export type GeneratorFormData = z.infer<typeof generatorFormSchema>;
@@ -32,6 +34,7 @@ export function FlashcardGeneratorDialog({ isOpen, onOpenChange, onSubmit }: Fla
     defaultValues: {
       content: '',
       deckName: '',
+      cardCount: 10,
     }
   });
 
@@ -82,6 +85,20 @@ export function FlashcardGeneratorDialog({ isOpen, onOpenChange, onSubmit }: Fla
                   <FormControl>
                     <Textarea placeholder="Paste your text here..." {...field} rows={10} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="cardCount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Flashcards</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="e.g., 10" {...field} min="1" max="50" onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} />
+                  </FormControl>
+                  <FormDescription>How many Q&A cards should the AI generate? (Max 50)</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

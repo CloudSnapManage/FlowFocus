@@ -26,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ToastAction } from "@/components/ui/toast";
 import type { Deck } from "@/lib/types";
 import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
+import { Label } from "@/components/ui/label";
 
 const MDEditor = dynamic(() => import('@uiw/react-md-editor').then(mod => mod.default.Markdown), {
   ssr: false,
@@ -57,6 +58,7 @@ export default function ContentSummarizerPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SummarizeTranscriptOutput | null>(null);
   const [flashcards, setFlashcards] = useState<GenerateFlashcardsOutput['cards'] | null>(null);
+  const [flashcardCount, setFlashcardCount] = useState<number>(10);
 
   const { toast } = useToast();
   const { importNote } = useNotes();
@@ -121,9 +123,13 @@ export default function ContentSummarizerPage() {
   
   const handleGenerateFlashcards = () => {
     if (!result) return;
+    
+    const count = Math.max(1, Math.min(50, flashcardCount || 1));
+    setFlashcardCount(count); // Correct the UI as well
+
     startFlashcardGeneration(async () => {
         try {
-            const flashcardResult = await generateFlashcards({ content: result.summary });
+            const flashcardResult = await generateFlashcards({ content: result.summary, cardCount: count });
             setFlashcards(flashcardResult.cards);
         } catch (e: any) {
             setError("Failed to generate flashcards. Please try again.");
@@ -354,9 +360,24 @@ export default function ContentSummarizerPage() {
                 )}
 
                 {!flashcards && !isGeneratingFlashcards && (
-                    <Button onClick={handleGenerateFlashcards} className="w-full">
-                        <BrainCircuit className="mr-2 h-4 w-4" /> Generate Flashcards from Summary
-                    </Button>
+                    <div className="flex items-end gap-4">
+                        <div className="flex-1 space-y-1">
+                            <Label htmlFor="flashcard-count">Number of Cards</Label>
+                            <Input 
+                                id="flashcard-count"
+                                type="number"
+                                value={flashcardCount}
+                                onChange={(e) => setFlashcardCount(Number(e.target.value))}
+                                min="1"
+                                max="50"
+                                placeholder="e.g., 10"
+                            />
+                            <p className="text-xs text-muted-foreground">Enter a number between 1 and 50.</p>
+                        </div>
+                        <Button onClick={handleGenerateFlashcards} disabled={isGeneratingFlashcards}>
+                            <BrainCircuit className="mr-2 h-4 w-4" /> Generate
+                        </Button>
+                    </div>
                 )}
 
                 {flashcards && (
