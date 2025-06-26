@@ -30,7 +30,7 @@ const MDEditor = dynamic(() => import('@uiw/react-md-editor').then(mod => mod.de
 const summaryStyles = [
   { value: 'Normal: A standard, clear, and well-structured summary for general study.', label: 'Normal' },
   { value: 'Academic: A formal, objective summary using precise terminology suitable for a university setting.', label: 'Academic Style' },
-  { value: 'In-depth: A comprehensive and highly detailed summary covering all nuances, intended for research purposes.', label: 'In-depth Research' },
+  { value: 'In-depth: Create a super long, comprehensive, and highly detailed summary. Elaborate and explain every concept in-depth, covering all nuances. This is intended for deep research purposes, so do not hold back on detail or length.', label: 'In-depth Research' },
   { value: 'For a 5-year-old: A summary using very simple words and short sentences, as if explaining to a 5-year-old.', label: 'For a 5-year-old' },
 ];
 
