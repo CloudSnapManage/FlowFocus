@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, FileVideo, AlertCircle, Download, Send, Type } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,14 +27,22 @@ const MDEditor = dynamic(() => import('@uiw/react-md-editor').then(mod => mod.de
   loading: () => <div className="p-4">Loading preview...</div>,
 });
 
+const summaryStyles = [
+  { value: 'Normal: A standard, clear, and well-structured summary for general study.', label: 'Normal' },
+  { value: 'Academic: A formal, objective summary using precise terminology suitable for a university setting.', label: 'Academic Style' },
+  { value: 'In-depth: A comprehensive and highly detailed summary covering all nuances, intended for research purposes.', label: 'In-depth Research' },
+  { value: 'For a 5-year-old: A summary using very simple words and short sentences, as if explaining to a 5-year-old.', label: 'For a 5-year-old' },
+];
 
 const urlFormSchema = z.object({
   url: z.string().url("Please enter a valid YouTube URL."),
+  summaryStyle: z.string().optional(),
 });
 type UrlFormValues = z.infer<typeof urlFormSchema>;
 
 const textFormSchema = z.object({
     content: z.string().min(100, "Please paste at least 100 characters of text to summarize."),
+    summaryStyle: z.string().optional(),
 });
 type TextFormValues = z.infer<typeof textFormSchema>;
 
@@ -47,12 +56,12 @@ export default function ContentSummarizerPage() {
 
   const urlForm = useForm<UrlFormValues>({
     resolver: zodResolver(urlFormSchema),
-    defaultValues: { url: "" },
+    defaultValues: { url: "", summaryStyle: summaryStyles[0].value },
   });
 
   const textForm = useForm<TextFormValues>({
       resolver: zodResolver(textFormSchema),
-      defaultValues: { content: "" },
+      defaultValues: { content: "", summaryStyle: summaryStyles[0].value },
   });
 
   const handleUrlSubmit = (data: UrlFormValues) => {
@@ -73,7 +82,10 @@ export default function ContentSummarizerPage() {
           throw new Error(resultData.error || 'An unexpected error occurred fetching the transcript.');
         }
         
-        const summaryResult = await summarizeTranscript({ transcript: resultData.transcript });
+        const summaryResult = await summarizeTranscript({ 
+            transcript: resultData.transcript, 
+            summaryStyle: data.summaryStyle 
+        });
         setResult(summaryResult);
       } catch (e: any) {
         setError(e.message || "An unexpected error occurred.");
@@ -87,7 +99,10 @@ export default function ContentSummarizerPage() {
 
     startTransition(async () => {
         try {
-            const summaryResult = await summarizeTranscript({ transcript: data.content });
+            const summaryResult = await summarizeTranscript({ 
+                transcript: data.content,
+                summaryStyle: data.summaryStyle
+            });
             setResult(summaryResult);
         } catch (e: any) {
             setError(e.message || "An unexpected error occurred.");
@@ -137,27 +152,49 @@ export default function ContentSummarizerPage() {
                     <CardTitle>YouTube Video URL</CardTitle>
                     <CardDescription>Pasting a link may not always work due to network restrictions. If it fails, try the "From Text" option.</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                    <FormField
-                        control={urlForm.control}
-                        name="url"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel className="sr-only">YouTube URL</FormLabel>
-                            <FormControl>
-                            <div className="flex gap-2">
-                                <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
-                                <Button type="submit" disabled={isPending} className="min-w-[150px]">
-                                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileVideo className="mr-2 h-4 w-4" />}
-                                {isPending ? "Summarizing..." : "Summarize"}
-                                </Button>
-                            </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
+                    <CardContent className="space-y-4">
+                        <FormField
+                            control={urlForm.control}
+                            name="url"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel className="sr-only">YouTube URL</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="https://www.youtube.com/watch?v=..." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={urlForm.control}
+                            name="summaryStyle"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Summary Style</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a summary style" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {summaryStyles.map(style => (
+                                                <SelectItem key={style.label} value={style.value}>{style.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </CardContent>
+                    <CardFooter>
+                         <Button type="submit" disabled={isPending} className="w-full">
+                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileVideo className="mr-2 h-4 w-4" />}
+                            {isPending ? "Summarizing..." : "Summarize Video"}
+                        </Button>
+                    </CardFooter>
                 </form>
                 </Form>
             </Card>
@@ -184,11 +221,35 @@ export default function ContentSummarizerPage() {
                             </FormItem>
                             )}
                         />
+                        <FormField
+                            control={textForm.control}
+                            name="summaryStyle"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Summary Style</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a summary style" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {summaryStyles.map(style => (
+                                                <SelectItem key={style.label} value={style.value}>{style.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                    <CardFooter>
                         <Button type="submit" disabled={isPending} className="w-full">
                             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Type className="mr-2 h-4 w-4" />}
                             {isPending ? "Summarizing..." : "Summarize Text"}
                         </Button>
-                    </CardContent>
+                    </CardFooter>
                 </form>
                 </Form>
             </Card>

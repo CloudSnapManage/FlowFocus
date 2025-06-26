@@ -14,6 +14,7 @@ import { z } from 'zod';
 const SummarizeTranscriptInputSchema = z.object({
   transcript: z.string().describe('The full transcript of a video.'),
   videoTitle: z.string().optional().describe('The original title of the video, if available.'),
+  summaryStyle: z.string().optional().describe('The desired persona and style for the summary. e.g., "Academic", "Simple".'),
 });
 export type SummarizeTranscriptInput = z.infer<typeof SummarizeTranscriptInputSchema>;
 
@@ -35,13 +36,17 @@ const prompt = ai.definePrompt({
   
 Your task is to summarize the following video transcript into detailed study notes.
 
+{{#if summaryStyle}}
+**You MUST adopt the following persona and writing style for your summary: {{{summaryStyle}}}**
+{{/if}}
+
 - Create a concise, engaging title for the study notes. If a video title is provided, use it as inspiration.
 - The summary should be well-structured. Use Markdown for formatting.
 - Use clear headings and subheadings to organize the content.
 - Use bullet points for key concepts, steps, or lists.
 - Bold key terms.
 - Include important definitions, examples, or explanations where useful.
-- The tone should be educational and clear.
+- The tone should be educational and clear, unless the specified style dictates otherwise.
 
 {{#if videoTitle}}
 Original Video Title: {{{videoTitle}}}
