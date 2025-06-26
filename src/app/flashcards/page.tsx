@@ -1,10 +1,9 @@
-
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import * as z from "zod";
-import { Plus, MoreVertical, Pencil, Trash2, FolderOpen } from "lucide-react";
+import { Plus, MoreVertical, Pencil, Trash2, FolderOpen, BrainCircuit } from "lucide-react";
 import {
   Card,
   CardHeader,
@@ -33,6 +32,11 @@ import { cn } from "@/lib/utils";
 import type { Deck } from "@/lib/types";
 import { LOCAL_STORAGE_KEYS } from "@/lib/constants";
 import { DeckFormDialog, type DeckFormData } from "@/components/deck-form-dialog";
+import { FlashcardGeneratorDialog, type GeneratorFormData } from "@/components/flashcard-generator-dialog";
+import { generateFlashcards } from "@/ai/flows/generate-flashcards";
+import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
+
 
 const initialDecks: Deck[] = [
   {
@@ -61,6 +65,8 @@ export default function FlashcardsHomePage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [deckToEdit, setDeckToEdit] = useState<Deck | null>(null);
   const [deckToDelete, setDeckToDelete] = useState<Deck | null>(null);
+  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const storedDecks = localStorage.getItem(LOCAL_STORAGE_KEYS.DECKS);
@@ -101,6 +107,45 @@ export default function FlashcardsHomePage() {
     setDecks(decks.filter(d => d.id !== deckId));
     setDeckToDelete(null);
   }
+  
+  const handleGenerateFromText = async (data: GeneratorFormData) => {
+    try {
+      const result = await generateFlashcards({ content: data.content });
+      
+      const newDeck: Deck = {
+        id: `d${Date.now()}`,
+        name: data.deckName,
+        description: `AI-generated from provided text.`,
+        cards: result.cards.map(card => ({
+          id: `c${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+          question: card.question,
+          answer: card.answer,
+          createdAt: new Date().toISOString(),
+          source: 'AI',
+        })),
+      };
+
+      setDecks(prevDecks => [newDeck, ...prevDecks]);
+
+      toast({
+        title: 'Flashcard Deck Created!',
+        description: `"${newDeck.name}" has been added.`,
+        action: (
+            <ToastAction asChild altText="View Deck">
+              <Link href={`/flashcards/${newDeck.id}`}>View Deck</Link>
+            </ToastAction>
+        ),
+      });
+
+    } catch (error) {
+      console.error("Failed to generate flashcards:", error);
+      toast({
+        title: 'Generation Failed',
+        description: 'There was an error generating flashcards. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,9 +154,14 @@ export default function FlashcardsHomePage() {
           <h1 className="text-3xl font-bold font-headline tracking-tight">Flashcard Decks</h1>
           <p className="text-muted-foreground">Create and manage your study decks.</p>
         </div>
-        <Button onClick={() => openFormDialog(null)}>
-            <Plus className="mr-2 h-4 w-4" /> New Deck
-        </Button>
+        <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setIsGeneratorOpen(true)}>
+                <BrainCircuit className="mr-2 h-4 w-4" /> Generate with AI
+            </Button>
+            <Button onClick={() => openFormDialog(null)}>
+                <Plus className="mr-2 h-4 w-4" /> New Deck
+            </Button>
+        </div>
       </div>
 
       {decks.length > 0 ? (
@@ -169,6 +219,12 @@ export default function FlashcardsHomePage() {
         onOpenChange={setIsFormOpen}
         onSubmit={handleSubmit}
         deck={deckToEdit}
+      />
+
+      <FlashcardGeneratorDialog 
+        isOpen={isGeneratorOpen}
+        onOpenChange={setIsGeneratorOpen}
+        onSubmit={handleGenerateFromText}
       />
 
       <AlertDialog open={!!deckToDelete} onOpenChange={open => !open && setDeckToDelete(null)}>
