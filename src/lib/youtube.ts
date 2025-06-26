@@ -11,9 +11,9 @@ import { YoutubeTranscript } from 'youtube-transcript';
  */
 export async function getYouTubeTranscript(url: string): Promise<string> {
   try {
-    // Explicitly request the English ('en') transcript.
-    // This helps ensure that we get a transcript even if it's auto-generated,
-    // and avoids issues with server-side locale detection.
+    // Explicitly request the English ('en') transcript and specify a country ('US').
+    // This makes the request more robust and helps ensure that we get a transcript 
+    // even if it's auto-generated, avoiding issues with server-side locale detection.
     const transcript = await YoutubeTranscript.fetchTranscript(url, {
       lang: 'en',
       country: 'US',
